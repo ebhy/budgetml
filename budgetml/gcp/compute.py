@@ -16,7 +16,6 @@
 
 
 import logging
-import time
 
 
 def list_instances(compute, project, zone):
