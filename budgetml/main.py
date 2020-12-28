@@ -6,12 +6,13 @@ from uuid import uuid4
 
 import googleapiclient.discovery
 
+from budgetml.constants import BUDGETML_BASE_IMAGE_NAME
 from budgetml.gcp.addresses import create_static_ip
 from budgetml.gcp.compute import create_instance
 from budgetml.gcp.function import create_cloud_function as create_gcp_function
 from budgetml.gcp.storage import upload_blob, create_bucket_if_not_exists
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class BudgetML:
@@ -61,6 +62,12 @@ class BudgetML:
 
         # docker-compose
         script += f'export BUDGET_PREDICTOR_ENTRYPOINT={entrypoint}' + '\n'
+        script += f'docker run {BUDGETML_BASE_IMAGE_NAME} -d -e ' \
+                  f'BUDGET_PREDICTOR_PATH=$BUDGET_PREDICTOR_PATH -e ' \
+                  f'BUDGET_PREDICTOR_ENTRYPOINT=$BUDGET_PREDICTOR_ENTRYPOINT' \
+                  + '\n'
+        logging.debug(f'Startup script: {script}')
+        return script
 
     def create_shut_down(self, cloud_function_name):
         # THIS WILL ONLY WORK IF GCLOUD CLI IS AUTHENTICATED TO THE RIGHT
