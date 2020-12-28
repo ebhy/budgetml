@@ -1,4 +1,5 @@
 import logging
+import subprocess
 import time
 from typing import Text
 
@@ -41,22 +42,27 @@ class BudgetML:
             self.static_ip = res['address']
 
     def create_start_up(self):
-        return '''#!/bin/bash\ndocker pull google/cloud-sdk'''
+        return ''
 
-    def create_shut_down(self, topic):
-        shutdown_script = '#!/bin/bash' + '\n'
-        shutdown_script += 'ofile=/var/tmp/shutdown.txt'
-        shutdown_script += 'echo "+++ Running shutdown script +++"'
-        shutdown_script += f'docker run -it google/cloud-sdk gcloud ' \
-                          f'pubsub topics publish {topic} ' \
-                          '--message "{}"'
+    def create_shut_down(self, cloud_function_name):
+        # THIS WILL ONLY WORK IF GCLOUD CLI IS AUTHENTICATED TO THE RIGHT
+        # PROJECT
+        token = subprocess.check_output(
+            "gcloud auth print-identity-token", shell=True)
+        token = token.decode().strip('\n')
+        trigger_url = f'https://{self.region}-' \
+                      f'{self.project}.cloud' \
+                      f'functions.net/{cloud_function_name}'
+        shutdown_script = f'curl -X POST {trigger_url} ' \
+                          f'-H "Authorization: bearer {token}" ' \
+                          '-H "Content-Type:application/json" --data "{}"'
         logging.debug(f'Shutdown script: {shutdown_script}')
         return shutdown_script
 
-    def create_cloud_function(self, instance_name, topic):
+    def create_cloud_function(self, instance_name):
         function_name = 'function-' + instance_name
         create_gcp_function(self.project, self.region, function_name,
-                            self.zone, instance_name, topic)
+                            self.zone, instance_name)
         return function_name
 
     def launch(self,
@@ -70,22 +76,17 @@ class BudgetML:
         :param instance_name:
         :param machine_type:
         :param preemptible:
-        :param static_ip_name:
         :return:
         """
         if static_ip_name is None:
             static_ip_name = f'ip-{instance_name}'
 
-        topic = 'topic-' + instance_name
-
         self.create_static_ip_if_not_exists(static_ip_name)
 
-        self.create_cloud_function(
-            instance_name,
-            topic)
+        cloud_function_name = self.create_cloud_function(instance_name)
 
         startup_script = self.create_start_up()
-        shutdown_script = self.create_shut_down(topic)
+        shutdown_script = self.create_shut_down(cloud_function_name)
 
         logging.info(
             f'Launching GCP Instance {instance_name} with IP: '

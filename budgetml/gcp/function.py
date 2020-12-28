@@ -7,7 +7,6 @@ import googleapiclient.discovery
 import requests
 
 from budgetml import orchestrator
-from budgetml.gcp.pubsub import create_topic
 
 service = googleapiclient.discovery.build('cloudfunctions', 'v1')
 cloud_functions_api = service.projects().locations().functions()
@@ -42,11 +41,9 @@ def create_upload_url(parent):
 
 
 def create_cloud_function(project, region, function_name,
-                          instance_zone, instance_name, topic):
-    # create pubsub topic
-    full_topic = create_topic(project, topic)
-
+                          instance_zone, instance_name):
     parent = 'projects/{}/locations/{}'.format(project, region)
+
     upload_url = create_upload_url(parent)
     config = {
         "name": parent + '/functions/' + function_name,
@@ -65,10 +62,7 @@ def create_cloud_function(project, region, function_name,
         # "ingressSettings": "ALLOW_INTERNAL_ONLY",
         # "sourceArchiveUrl": "",
         "sourceUploadUrl": upload_url,
-        "eventTrigger": {
-            "eventType": "providers/cloud.pubsub/eventTypes/topic.publish",
-            "resource": f"{full_topic}"
-        }
+        "httpsTrigger": {}
     }
 
     logging.debug(f'Creating function with config: {config}')
