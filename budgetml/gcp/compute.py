@@ -25,7 +25,8 @@ def list_instances(compute, project, zone):
 
 def create_instance(compute, project, zone, static_ip, instance_name,
                     machine_type, startup_script, shutdown_script,
-                    preemptible):
+                    preemptible, requirements_content,
+                    docker_template_content):
     # Get the latest Debian Jessie image.
     image_response = compute.images().getFromFamily(
         project='cos-cloud', family='cos-85-lts').execute()
@@ -85,6 +86,15 @@ def create_instance(compute, project, zone, static_ip, instance_name,
                     'key': 'shutdown-script',
                     'value': shutdown_script
                 },
+                {
+                    # Shutdown script is automatically executed on shutdown.
+                    'key': 'REQUIREMENTS',
+                    'value': requirements_content
+                },
+                {
+                    'key': 'DOCKER_TEMPLATE',
+                    'value': docker_template_content,
+                }
             ]
         }
     }

@@ -1,5 +1,7 @@
+import base64
 import inspect
 import logging
+import os
 import subprocess
 from typing import Text
 from uuid import uuid4
@@ -51,21 +53,58 @@ class BudgetML:
         file_name = inspect.getfile(predictor_class)
         entrypoint = predictor_class.__name__
 
-        # upload to gcs
-        gcs_path = f'predictors/{entrypoint}_{self.unique_id}.py'
-        upload_blob(bucket, file_name, gcs_path)
+        # upload predictor to gcs
+        predictor_gcs_path = f'predictors/{self.unique_id}/{entrypoint}.py'
+        upload_blob(bucket, file_name, predictor_gcs_path)
+
+        template_dockerfile_location = '/tmp/template.Dockerfile'
+        requirements_location = '/tmp/custom_requirements.txt'
+        image_name = 'budgetml:0.0.1'
 
         # create script
         script = '#!/bin/bash' + '\n'
-        script += f'export BUDGET_PREDICTOR_PATH=gs://{bucket}/{gcs_path}' + \
+
+        # get metadata
+        script += 'export DOCKER_TEMPLATE=$(curl ' \
+                  'http://metadata.google.internal/computeMetadata/v1' \
+                  '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
+                  'Google")' + '\n'
+        script += 'export REQUIREMENTS=$(curl ' \
+                  'http://metadata.google.internal/computeMetadata/v1' \
+                  '/instance/attributes/REQUIREMENTS -H "Metadata-Flavor: ' \
+                  'Google")' + '\n'
+
+        # write temporary files
+        script += f'echo $DOCKER_TEMPLATE | base64 --decode >> ' \
+                  f'{template_dockerfile_location}' + '\n'
+        script += f'echo $REQUIREMENTS | base64 --' \
+                  f'decode >> {requirements_location}' + '\n'
+
+        # export enn variables
+        script += f'export BUDGET_PREDICTOR_PATH=gs://{bucket}/' \
+                  f'{predictor_gcs_path}' + \
                   '\n'
         script += f'export BUDGET_PREDICTOR_ENTRYPOINT={entrypoint}' + '\n'
 
-        # docker-compose
+        # go into tmp directory
+        script += 'cd /tmp' + '\n'
+
+        # docker build
+        script += f'docker build -f {template_dockerfile_location} -t ' \
+                  f'{image_name} .' + '\n'
+
+        # docker-run
         script += f'docker run -d -e ' \
                   f'BUDGET_PREDICTOR_PATH=$BUDGET_PREDICTOR_PATH -e ' \
                   f'BUDGET_PREDICTOR_ENTRYPOINT=$BUDGET_PREDICTOR_ENTRYPOINT' \
-                  f' {BUDGETML_BASE_IMAGE_NAME}' + '\n'
+                  f' {image_name}' + '\n'
         logging.debug(f'Startup script: {script}')
         return script
 
@@ -93,6 +132,8 @@ class BudgetML:
 
     def launch(self,
                predictor_class,
+               requirements_path: Text = None,
+               dockerfile_path: Text = None,
                bucket_name: Text = None,
                instance_name: Text = None,
                machine_type: Text = 'e2-medium',
@@ -102,6 +143,8 @@ class BudgetML:
         Launches the VM.
 
         :param predictor_class: Class of type budgetml.BasePredictor.
+        :param dockerfile_path:
+        :param requirements_path:
         :param bucket_name:
         :param instance_name:
         :param machine_type:
@@ -126,6 +169,30 @@ class BudgetML:
         startup_script = self.create_start_up(predictor_class, bucket_name)
         shutdown_script = self.create_shut_down(cloud_function_name)
 
+        # create docker template content
+        if dockerfile_path is None:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            dockerfile_path = os.path.join(base_path, 'template.Dockerfile')
+
+        with open(dockerfile_path, 'r') as f:
+            docker_template_content = f.read()
+            # TODO: Maybe use env variables for this
+            docker_template_content = docker_template_content.replace(
+                "$BASE_IMAGE", BUDGETML_BASE_IMAGE_NAME)
+
+        # create requirements content
+        if requirements_path is None:
+            requirements_content = ''
+        else:
+            with open(requirements_path, 'r') as f:
+                requirements_content = f.read()
+
+        # encode the files to preserve the structure like newlines
+        requirements_content = base64.b64encode(
+            requirements_content.encode()).decode()
+        docker_template_content = base64.b64encode(
+            docker_template_content.encode()).decode()
+
         logging.info(
             f'Launching GCP Instance {instance_name} with IP: '
             f'{self.static_ip} in project: {self.project}, zone: '
@@ -139,5 +206,7 @@ class BudgetML:
             machine_type,
             startup_script,
             shutdown_script,
-            preemptible
+            preemptible,
+            requirements_content,
+            docker_template_content,
         )
