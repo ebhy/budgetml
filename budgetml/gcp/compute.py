@@ -15,6 +15,7 @@
 # limitations under the License.
 
 
+import logging
 import time
 
 
@@ -101,18 +102,11 @@ def delete_instance(compute, project, zone, name):
         instance=name).execute()
 
 
-def wait_for_operation(compute, project, zone, operation):
-    print('Waiting for operation to finish...')
-    while True:
-        result = compute.zoneOperations().get(
-            project=project,
-            zone=zone,
-            operation=operation).execute()
-
-        if result['status'] == 'DONE':
-            print("done.")
-            if 'error' in result:
-                raise Exception(result['error'])
-            return result
-
-        time.sleep(1)
+def get_instance(compute, project, zone, instance_name):
+    res = compute.instances().get(
+        project=project,
+        zone=zone,
+        instance=instance_name
+    ).execute()
+    logging.debug(f"Get instance response: {res}")
+    return res

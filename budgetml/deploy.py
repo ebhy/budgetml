@@ -1,10 +1,13 @@
+import logging
 import time
 from typing import Text
 
 import googleapiclient.discovery
 
-from budgetml.gcp.addresses import create_static_ip_address
-from budgetml.gcp.compute import create_instance
+from budgetml.gcp.addresses import create_static_ip, promote_ephemeral_ip
+from budgetml.gcp.compute import create_instance, get_instance
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class BudgetML:
@@ -26,28 +29,30 @@ class BudgetML:
         # Initialize compute REST API client
         self.compute = googleapiclient.discovery.build('compute', 'v1')
 
-    def create_static_ip_if_not_exists(self):
-        if self.static_ip is not None:
-            self.static_ip = create_static_ip_address(
+    def create_static_ip_if_not_exists(self, static_ip_name: Text):
+        if self.static_ip is None:
+            res = create_static_ip(
                 self.compute,
                 project=self.project,
                 region=self.region,
-                static_ip=self.static_ip,
+                static_ip_name=static_ip_name,
             )
+            self.static_ip = res['address']
 
     def create_start_up(self):
-        pass
+        return ''
 
     def create_shut_down(self):
-        pass
+        return ''
 
     def create_cloud_function(self):
         pass
 
     def launch(self,
-               instance_name: Text = f'budget_{int(time.time())}',
+               instance_name: Text = f'budget-{int(time.time())}',
                machine_type: Text = 'e2-medium',
-               preemptible: bool = True):
+               preemptible: bool = True,
+               static_ip_name: Text = None):
         """
         Launches the VM.
 
@@ -56,13 +61,20 @@ class BudgetML:
         :param preemptible:
         :return:
         """
-        self.static_ip = self.create_static_ip_if_not_exists()
+        if static_ip_name is None:
+            static_ip_name = f'ip-{instance_name}'
 
-        cloud_function_name = self.create_cloud_function()
+        self.create_static_ip_if_not_exists(static_ip_name)
+
+        # cloud_function_name = self.create_cloud_function()
 
         startup_script = self.create_start_up()
         shutdown_script = self.create_shut_down()
 
+        logging.info(
+            f'Launching GCP Instance {instance_name} with IP: '
+            f'{self.static_ip} in project: {self.project}, zone: '
+            f'{self.zone}. The machine type is: {machine_type}')
         create_instance(
             self.compute,
             self.project,
@@ -79,22 +91,7 @@ class BudgetML:
 #### #####
 
 budgetml = BudgetML(
-    predictor_class='',
-    requirements='',
-    gcp_project='',
-    gcp_region='',
-    static_ip='',
+    project='budgetml'
 )
 
-budgetml.push()
-
-"gcloud compute instances create $INSTANCE_NAME " \
-"--address $STATIC_IP_ADDRESS --network-tier=STANDARD --zone=us-central1-a " \
-"--machine-type=n1-highmem-2 --boot-disk-size=20GB " \
-"--metadata=GIT_USERNAME=$GIT_USERNAME,GIT_PASSWORD=$GIT_PASSWORD " \
-"--no-restart-on-failure " \
-"--maintenance-policy=TERMINATE --preemptible --tags=insecure-allow-all," \
-"http-server,https-server " \
-"--image=cos-stable-78-12499-89-0 --image-project=cos-cloud " \
-"--metadata-from-file shutdown-script=.ci/shutdown-script.sh," \
-"startup-script=.ci/startup-script.sh --scopes cloud-platform"
+budgetml.launch()
