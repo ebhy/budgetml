@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 import googleapiclient.discovery
 
@@ -16,9 +17,10 @@ def start_instance(project, zone, instance_name):
     return res
 
 
-def launch():
+def launch(request, context):
     project = os.environ['BUDGET_PROJECT']
     zone = os.environ['BUDGET_ZONE']
     instance = os.environ['BUDGET_INSTANCE']
 
+    time.sleep(40)
     start_instance(project, zone, instance)

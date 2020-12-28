@@ -66,7 +66,8 @@ def create_instance(compute, project, zone, static_ip, instance_name,
             'email': 'default',
             'scopes': [
                 'https://www.googleapis.com/auth/devstorage.read_write',
-                'https://www.googleapis.com/auth/logging.write'
+                'https://www.googleapis.com/auth/logging.write',
+                'https://www.googleapis.com/auth/cloud-platform'
             ]
         }],
 

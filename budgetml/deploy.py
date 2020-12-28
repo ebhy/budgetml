@@ -41,15 +41,22 @@ class BudgetML:
             self.static_ip = res['address']
 
     def create_start_up(self):
-        return ''
+        return '''#!/bin/bash\ndocker pull google/cloud-sdk'''
 
-    def create_shut_down(self):
-        return ''
+    def create_shut_down(self, topic):
+        shutdown_script = '#!/bin/bash' + '\n'
+        shutdown_script += 'ofile=/var/tmp/shutdown.txt'
+        shutdown_script += 'echo "+++ Running shutdown script +++"'
+        shutdown_script += f'docker run -it google/cloud-sdk gcloud ' \
+                          f'pubsub topics publish {topic} ' \
+                          '--message "{}"'
+        logging.debug(f'Shutdown script: {shutdown_script}')
+        return shutdown_script
 
-    def create_cloud_function(self, instance_name):
+    def create_cloud_function(self, instance_name, topic):
         function_name = 'function-' + instance_name
         create_gcp_function(self.project, self.region, function_name,
-                            self.zone, instance_name)
+                            self.zone, instance_name, topic)
         return function_name
 
     def launch(self,
@@ -63,33 +70,38 @@ class BudgetML:
         :param instance_name:
         :param machine_type:
         :param preemptible:
+        :param static_ip_name:
         :return:
         """
         if static_ip_name is None:
             static_ip_name = f'ip-{instance_name}'
 
-        # self.create_static_ip_if_not_exists(static_ip_name)
+        topic = 'topic-' + instance_name
 
-        cloud_function_name = self.create_cloud_function(instance_name)
+        self.create_static_ip_if_not_exists(static_ip_name)
 
-        # startup_script = self.create_start_up()
-        # shutdown_script = self.create_shut_down()
-        #
-        # logging.info(
-        #     f'Launching GCP Instance {instance_name} with IP: '
-        #     f'{self.static_ip} in project: {self.project}, zone: '
-        #     f'{self.zone}. The machine type is: {machine_type}')
-        # create_instance(
-        #     self.compute,
-        #     self.project,
-        #     self.zone,
-        #     self.static_ip,
-        #     instance_name,
-        #     machine_type,
-        #     startup_script,
-        #     shutdown_script,
-        #     preemptible
-        # )
+        self.create_cloud_function(
+            instance_name,
+            topic)
+
+        startup_script = self.create_start_up()
+        shutdown_script = self.create_shut_down(topic)
+
+        logging.info(
+            f'Launching GCP Instance {instance_name} with IP: '
+            f'{self.static_ip} in project: {self.project}, zone: '
+            f'{self.zone}. The machine type is: {machine_type}')
+        create_instance(
+            self.compute,
+            self.project,
+            self.zone,
+            self.static_ip,
+            instance_name,
+            machine_type,
+            startup_script,
+            shutdown_script,
+            preemptible
+        )
 
 
 #### #####
