@@ -10,13 +10,13 @@ services:
             - PUID=1000
             - PGID=1000
             - TZ=America/Washington
-            - URL=api.pichance.com
+            - URL=api.budgetml.com
             - SUBDOMAINS=srgan,
             - VALIDATION=http
             - STAGING=false #optional
         volumes:
-            - ./nginx.conf:/config/nginx/proxy-confs/app.subdomain.conf
-            - ./certs/:/config/etc/letsencrypt/
+            - ${BUDGET_NGINX_PATH}:/config/nginx/proxy-confs/app.subdomain.conf
+            - ${BUDGET_CERTS_PATH}:/config/etc/letsencrypt/
         ports:
             - 443:443
             - 80:80 #optional
@@ -24,29 +24,17 @@ services:
         networks: 
             - production
 
-    pichance:
-        image: pichance
-        container_name: pichance
+    budgetml:
+        image: budgetml
+        container_name: budgetml
         build:
             context: .
-            dockerfile: api.Dockerfile
+            dockerfile: Dockerfile
         ports:
             - 8080:80 # maps port 80 in our container to 8080
         restart: unless-stopped
         networks: 
             - production
-
-#    animegan:
-#        image: animegan
-#        build:
-#            context: .
-#            dockerfile: animegan.Dockerfile
-#        container_name: animegan
-#        ports:
-#            - 8081:5000 # maps port 5000 in our container to 8081
-#        restart: unless-stopped
-#        networks:
-#            - production
 
 networks:
     production:
