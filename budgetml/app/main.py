@@ -7,8 +7,8 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from budgetml.app.load import get_predictor_class
-from budgetml.app.basepredictor import BasePredictor
+from basepredictor import BasePredictor
+from load import get_predictor_class
 
 PREDICTOR_CLASS_PATH = os.getenv('BUDGET_PREDICTOR_PATH')
 assert PREDICTOR_CLASS_PATH is not None
