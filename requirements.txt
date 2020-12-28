@@ -8,3 +8,4 @@ aiofiles==0.4.0
 tensorflow_addons==0.7.0
 google-cloud-vision==0.41.0
 h5py==2.8.0
+google-api-python-client==1.12.8
