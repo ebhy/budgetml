@@ -8,7 +8,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from budgetml.app.load import get_predictor_class
-from budgetml.app.predictor import Predictor
+from budgetml.app.basepredictor import BasePredictor
 
 PREDICTOR_CLASS_PATH = os.getenv('BUDGET_PREDICTOR_PATH')
 assert PREDICTOR_CLASS_PATH is not None
@@ -30,7 +30,7 @@ app.add_middleware(
 
 # Load predictor
 args = {}
-predictor_class: Type[Predictor] = get_predictor_class(
+predictor_class: Type[BasePredictor] = get_predictor_class(
     PREDICTOR_CLASS_PATH, ENV_PREDICTOR_ENTRYPOINT)
 predictor = predictor_class(args)
 

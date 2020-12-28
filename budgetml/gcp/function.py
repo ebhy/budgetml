@@ -8,8 +8,11 @@ import requests
 
 from budgetml import orchestrator
 
-service = googleapiclient.discovery.build('cloudfunctions', 'v1')
-cloud_functions_api = service.projects().locations().functions()
+
+def get_api():
+    service = googleapiclient.discovery.build('cloudfunctions', 'v1')
+    cloud_functions_api = service.projects().locations().functions()
+    return cloud_functions_api
 
 
 def zipdir(path, ziph):
@@ -22,8 +25,8 @@ def zipdir(path, ziph):
 
 def create_upload_url(parent):
     upload_url = \
-        cloud_functions_api.generateUploadUrl(parent=parent,
-                                              body={}).execute()[
+        get_api().generateUploadUrl(parent=parent,
+                                    body={}).execute()[
             'uploadUrl']
     logging.debug("Create Upload URL", upload_url)
 
@@ -66,7 +69,7 @@ def create_cloud_function(project, region, function_name,
     }
 
     logging.debug(f'Creating function with config: {config}')
-    res = cloud_functions_api.create(
+    res = get_api().create(
         location=parent,
         body=config).execute()
     logging.debug(f'Function {function_name} created. Response: {res}')
