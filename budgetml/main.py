@@ -52,20 +52,20 @@ class BudgetML:
         entrypoint = predictor_class.__name__
 
         # upload to gcs
-        destination_blob_name = f'predictors/{entrypoint}.py'
-        gcs_path = upload_blob(bucket, file_name, destination_blob_name)
+        gcs_path = f'predictors/{entrypoint}_{self.unique_id}.py'
+        upload_blob(bucket, file_name, gcs_path)
 
         # create script
         script = '#!/bin/bash' + '\n'
-        script += f'export BUDGET_PREDICTOR_PATH={gcs_path}' + '\n'
+        script += f'export BUDGET_PREDICTOR_PATH=gs://{bucket}/{gcs_path}' + \
+                  '\n'
         script += f'export BUDGET_PREDICTOR_ENTRYPOINT={entrypoint}' + '\n'
 
         # docker-compose
-        script += f'export BUDGET_PREDICTOR_ENTRYPOINT={entrypoint}' + '\n'
-        script += f'docker run {BUDGETML_BASE_IMAGE_NAME} -d -e ' \
+        script += f'docker run -d -e ' \
                   f'BUDGET_PREDICTOR_PATH=$BUDGET_PREDICTOR_PATH -e ' \
                   f'BUDGET_PREDICTOR_ENTRYPOINT=$BUDGET_PREDICTOR_ENTRYPOINT' \
-                  + '\n'
+                  f' {BUDGETML_BASE_IMAGE_NAME}' + '\n'
         logging.debug(f'Startup script: {script}')
         return script
 

@@ -3,12 +3,10 @@ from typing import Dict
 from starlette.requests import Request
 from starlette.responses import Response
 
-from budgetml import BasePredictor
 
-
-class MyPredictor(BasePredictor):
+class MyPredictor:
     def __init__(self, args: Dict):
-        super().__init__(args)
+        pass
 
     def predict(self, request: Request) -> Response:
         return Response('WOW')
