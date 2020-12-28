@@ -1,8 +1,11 @@
 from budgetml import BudgetML
-from predictor import MyPredictor
+from fastsrgan_predictor import FastSRGANPredictor
 
 budgetml = BudgetML(
     project='budgetml'
 )
 
-budgetml.launch(MyPredictor)
+budgetml.launch(
+    FastSRGANPredictor,
+    requirements_path='/home/hamza/workspace/personal/budgetml/fastsrgan_requirements.txt'
+)

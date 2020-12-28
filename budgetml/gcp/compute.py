@@ -45,6 +45,7 @@ def create_instance(compute, project, zone, static_ip, instance_name,
         'disks': [
             {
                 'boot': True,
+                'diskSizeGb': '100',
                 'autoDelete': True,
                 'initializeParams': {
                     'sourceImage': source_disk_image,
