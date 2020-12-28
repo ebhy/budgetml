@@ -1,0 +1,52 @@
+---
+version: "2"
+services:
+    letsencrypt:
+        image: linuxserver/letsencrypt
+        container_name: letsencrypt
+        cap_add:
+            - NET_ADMIN
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=America/Washington
+            - URL=api.pichance.com
+            - SUBDOMAINS=srgan,
+            - VALIDATION=http
+            - STAGING=false #optional
+        volumes:
+            - ./nginx.conf:/config/nginx/proxy-confs/app.subdomain.conf
+            - ./certs/:/config/etc/letsencrypt/
+        ports:
+            - 443:443
+            - 80:80 #optional
+        restart: unless-stopped
+        networks: 
+            - production
+
+    pichance:
+        image: pichance
+        container_name: pichance
+        build:
+            context: .
+            dockerfile: api.Dockerfile
+        ports:
+            - 8080:80 # maps port 80 in our container to 8080
+        restart: unless-stopped
+        networks: 
+            - production
+
+#    animegan:
+#        image: animegan
+#        build:
+#            context: .
+#            dockerfile: animegan.Dockerfile
+#        container_name: animegan
+#        ports:
+#            - 8081:5000 # maps port 5000 in our container to 8081
+#        restart: unless-stopped
+#        networks:
+#            - production
+
+networks:
+    production:

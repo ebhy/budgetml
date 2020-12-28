@@ -4,3 +4,4 @@ google-api-python-client==1.12.8
 starlette~=0.14.1
 requests~=2.25.1
 setuptools~=51.1.0.post20201221
+google-cloud-storage==1.35.0
