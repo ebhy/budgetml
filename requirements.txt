@@ -1,11 +1,6 @@
-fastapi==0.45.0
-uvicorn==0.10.9
-tensorflow==2.1.0
-opencv-python==4.1.1.26
-numpy==1.17.2
-python-multipart==0.0.5
-aiofiles==0.4.0
-tensorflow_addons==0.7.0
-google-cloud-vision==0.41.0
-h5py==2.8.0
+fastapi==0.63.0
+uvicorn==0.13.2
 google-api-python-client==1.12.8
+starlette~=0.14.1
+requests~=2.25.1
+setuptools~=51.1.0.post20201221

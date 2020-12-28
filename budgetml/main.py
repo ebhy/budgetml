@@ -9,7 +9,7 @@ from budgetml.gcp.addresses import create_static_ip
 from budgetml.gcp.compute import create_instance
 from budgetml.gcp.function import create_cloud_function as create_gcp_function
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 class BudgetML:
@@ -103,12 +103,3 @@ class BudgetML:
             shutdown_script,
             preemptible
         )
-
-
-#### #####
-
-budgetml = BudgetML(
-    project='budgetml'
-)
-
-budgetml.launch()
