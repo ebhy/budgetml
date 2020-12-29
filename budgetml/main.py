@@ -2,10 +2,12 @@ import base64
 import inspect
 import logging
 import os
+import pathlib
 import subprocess
 from typing import Text
 from uuid import uuid4
 
+import docker
 import googleapiclient.discovery
 
 from budgetml.constants import BUDGETML_BASE_IMAGE_NAME
@@ -75,6 +77,14 @@ class BudgetML:
                   '' \
                   '' \
                   '' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
+                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -130,6 +140,26 @@ class BudgetML:
                             self.zone, instance_name)
         return function_name
 
+    def get_docker_file_contents(self, dockerfile_path: Text):
+        if dockerfile_path is None:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            dockerfile_path = os.path.join(base_path, 'template.Dockerfile')
+
+        with open(dockerfile_path, 'r') as f:
+            docker_template_content = f.read()
+            # TODO: Maybe use env variables for this
+            docker_template_content = docker_template_content.replace(
+                "$BASE_IMAGE", BUDGETML_BASE_IMAGE_NAME)
+        return docker_template_content
+
+    def get_requirements_file_contents(self, requirements_path: Text):
+        if requirements_path is None:
+            requirements_content = ''
+        else:
+            with open(requirements_path, 'r') as f:
+                requirements_content = f.read()
+        return requirements_content
+
     def launch(self,
                predictor_class,
                requirements_path: Text = None,
@@ -170,22 +200,12 @@ class BudgetML:
         shutdown_script = self.create_shut_down(cloud_function_name)
 
         # create docker template content
-        if dockerfile_path is None:
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            dockerfile_path = os.path.join(base_path, 'template.Dockerfile')
-
-        with open(dockerfile_path, 'r') as f:
-            docker_template_content = f.read()
-            # TODO: Maybe use env variables for this
-            docker_template_content = docker_template_content.replace(
-                "$BASE_IMAGE", BUDGETML_BASE_IMAGE_NAME)
+        docker_template_content = self.get_docker_file_contents(
+            dockerfile_path)
 
         # create requirements content
-        if requirements_path is None:
-            requirements_content = ''
-        else:
-            with open(requirements_path, 'r') as f:
-                requirements_content = f.read()
+        requirements_content = self.get_requirements_file_contents(
+            requirements_path)
 
         # encode the files to preserve the structure like newlines
         requirements_content = base64.b64encode(
@@ -210,3 +230,81 @@ class BudgetML:
             requirements_content,
             docker_template_content,
         )
+
+    def launch_local(self,
+                     predictor_class,
+                     requirements_path: Text = None,
+                     dockerfile_path: Text = None,
+                     bucket_name: Text = None):
+
+        # Create bucket if it doesnt exist
+        if bucket_name is None:
+            bucket_name = f'budget_bucket_{self.unique_id}'
+        create_bucket_if_not_exists(bucket_name)
+
+        # create docker template content
+        docker_template_content = self.get_docker_file_contents(
+            dockerfile_path)
+
+        # create requirements content
+        requirements_content = self.get_requirements_file_contents(
+            requirements_path)
+
+        tmp_dir = 'tmp'
+        try:
+            os.makedirs(tmp_dir)
+        except OSError as e:
+            # already exists
+            pass
+
+        tmp_reqs_path = os.path.join(tmp_dir, 'custom_requirements.txt')
+        reqs_path = pathlib.Path(tmp_reqs_path)
+        reqs_path.write_text(requirements_content)
+
+        tmp_dockerfile_path = os.path.join(tmp_dir, 'template.Dockerfile')
+        docker_path = pathlib.Path(tmp_dockerfile_path)
+        docker_path.write_text(docker_template_content)
+
+        # build image
+        client = docker.from_env()
+        tag = 'budget_local'
+
+        client.images.build(
+            path=tmp_dir,
+            dockerfile='template.Dockerfile',
+            tag=tag,
+        )
+
+        file_name = inspect.getfile(predictor_class)
+        entrypoint = predictor_class.__name__
+
+        # upload predictor to gcs
+        predictor_gcs_path = f'predictors/{self.unique_id}/{entrypoint}.py'
+        upload_blob(bucket_name, file_name, predictor_gcs_path)
+
+        BUDGET_PREDICTOR_PATH = f'gs://{bucket_name}/{predictor_gcs_path}'
+        BUDGET_PREDICTOR_ENTRYPOINT = predictor_class.__name__
+
+        credentials_path = '/app/sa.json'
+        ports = {'80/tcp': 8080}
+
+        environment = [f"BUDGET_PREDICTOR_PATH={BUDGET_PREDICTOR_PATH}",
+                       f'BUDGET_PREDICTOR_ENTRYPOINT='
+                       f'{BUDGET_PREDICTOR_ENTRYPOINT}',
+                       f'GOOGLE_APPLICATION_CREDENTIALS={credentials_path}']
+
+        volumes = {os.environ['GOOGLE_APPLICATION_CREDENTIALS']: {
+            'bind': f'{credentials_path}', 'mode': 'ro'}}
+        logging.debug(
+            f'Running docker container {tag} with env: {environment}, '
+            f'ports: {ports}, volumes: {volumes}')
+        container = client.containers.run(
+            tag,
+            ports=ports,
+            environment=environment,
+            auto_remove=True,
+            detach=True,
+            name=tag,
+            volumes=volumes
+        )
+        print(container.logs())

@@ -3,3 +3,4 @@ uvicorn==0.13.2
 google-api-python-client==1.12.8
 requests~=2.25.1
 google-cloud-storage==1.35.0
+docker==4.4.1
