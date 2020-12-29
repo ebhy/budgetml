@@ -17,7 +17,7 @@ class BasePredictor:
         pass
 
     @abstractmethod
-    def predict(self, request: Request) -> Response:
+    async def predict(self, request: Request) -> Response:
         """Responsible for running the inference.
 
         Args:

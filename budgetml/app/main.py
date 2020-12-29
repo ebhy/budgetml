@@ -47,9 +47,10 @@ def health_check():
     return {"I'm": "Alive!"}
 
 
-@app.post("/predict")
+@app.post("/predict/")
 async def predict(request: Request) -> Response:
-    return PREDICTOR.predict(request)
+    global PREDICTOR
+    return await PREDICTOR.predict(request)
 
 
 if __name__ == "__main__":

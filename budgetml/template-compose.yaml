@@ -21,7 +21,7 @@ services:
             - 443:443
             - 80:80 #optional
         restart: unless-stopped
-        networks: 
+        networks:
             - production
 
     budgetml:
@@ -33,7 +33,7 @@ services:
         ports:
             - 8080:80 # maps port 80 in our container to 8080
         restart: unless-stopped
-        networks: 
+        networks:
             - production
 
 networks:
