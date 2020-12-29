@@ -7,5 +7,7 @@ budgetml = BudgetML(
 
 budgetml.launch(
     FastSRGANPredictor,
+    domain='pichance.com',
+    subdomain='budget',
     requirements_path='/home/hamza/workspace/personal/budgetml/fastsrgan_requirements.txt'
 )

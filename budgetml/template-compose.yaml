@@ -10,8 +10,8 @@ services:
             - PUID=1000
             - PGID=1000
             - TZ=America/Washington
-            - URL=api.budgetml.com
-            - SUBDOMAINS=srgan,
+            - URL=${BUDGET_DOMAIN}
+            - SUBDOMAINS=${BUDGET_SUBDOMAIN},
             - VALIDATION=http
             - STAGING=false #optional
         volumes:
@@ -27,9 +27,12 @@ services:
     budgetml:
         image: budgetml
         container_name: budgetml
+        environment:
+            - BUDGET_PREDICTOR_PATH=${BUDGET_PREDICTOR_PATH}
+            - BUDGET_PREDICTOR_ENTRYPOINT=${BUDGET_PREDICTOR_ENTRYPOINT}
         build:
             context: .
-            dockerfile: Dockerfile
+            dockerfile: template.Dockerfile
         ports:
             - 8080:80 # maps port 80 in our container to 8080
         restart: unless-stopped

@@ -51,7 +51,52 @@ class BudgetML:
             )
             self.static_ip = res['address']
 
-    def create_start_up(self, predictor_class, bucket):
+    def get_docker_file_contents(self, dockerfile_path: Text):
+        if dockerfile_path is None:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            dockerfile_path = os.path.join(base_path, 'template.Dockerfile')
+
+        with open(dockerfile_path, 'r') as f:
+            docker_template_content = f.read()
+            # TODO: Maybe use env variables for this
+            docker_template_content = docker_template_content.replace(
+                "$BASE_IMAGE", BUDGETML_BASE_IMAGE_NAME)
+        return docker_template_content
+
+    def get_requirements_file_contents(self, requirements_path: Text):
+        if requirements_path is None:
+            requirements_content = ''
+        else:
+            with open(requirements_path, 'r') as f:
+                requirements_content = f.read()
+        return requirements_content
+
+    def get_docker_compose_contents(self, docker_compose_path: Text = None):
+        if docker_compose_path is None:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            docker_compose_path = os.path.join(
+                base_path, 'template-compose.yaml')
+
+        with open(docker_compose_path, 'r') as f:
+            docker_compose_content = f.read()
+            return docker_compose_content
+
+    def get_nginx_conf_contents(self,
+                                domain: Text,
+                                subdomain: Text,
+                                nginx_config_path: Text = None):
+        if nginx_config_path is None:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            nginx_config_path = os.path.join(
+                base_path, 'template-nginx.conf')
+
+        with open(nginx_config_path, 'r') as f:
+            nginx_config_content = f.read()
+            nginx_config_content = nginx_config_content.replace(
+                "$BUDGET_DOMAIN", f'{subdomain}.{domain}')
+            return nginx_config_content
+
+    def create_start_up(self, predictor_class, bucket, domain, subdomain):
         file_name = inspect.getfile(predictor_class)
         entrypoint = predictor_class.__name__
 
@@ -59,12 +104,22 @@ class BudgetML:
         predictor_gcs_path = f'predictors/{self.unique_id}/{entrypoint}.py'
         upload_blob(bucket, file_name, predictor_gcs_path)
 
-        template_dockerfile_location = '/tmp/template.Dockerfile'
-        requirements_location = '/tmp/custom_requirements.txt'
+        context_dir = '/tmp/budget_base'
+        template_dockerfile_location = f'{context_dir}/template.Dockerfile'
+        requirements_location = f'{context_dir}/custom_requirements.txt'
+        template_dockercompose_location = f'{context_dir}/docker-compose.yaml'
+        nginx_conf_location = f'{context_dir}/nginx.conf'
+        certs_path = './certs/'
         image_name = 'budgetml:0.0.1'
 
         # create script
         script = '#!/bin/bash' + '\n'
+
+        # create context
+        script += f'mkdir {context_dir}' + '\n'
+
+        # go into tmp directory
+        script += f'cd {context_dir}' + '\n'
 
         # get metadata
         script += 'export DOCKER_TEMPLATE=$(curl ' \
@@ -72,23 +127,20 @@ class BudgetML:
                   '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
                   '' \
                   '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
                   '/instance/attributes/REQUIREMENTS -H "Metadata-Flavor: ' \
+                  'Google")' + '\n'
+        script += 'export DOCKER_COMPOSE_TEMPLATE=$(curl ' \
+                  'http://metadata.google.internal/computeMetadata/v1' \
+                  '/instance/attributes/DOCKER_COMPOSE_TEMPLATE -H ' \
+                  '"Metadata-Flavor: ' \
+                  'Google")' + '\n'
+        script += 'export NGINX_CONF_TEMPLATE=$(curl ' \
+                  'http://metadata.google.internal/computeMetadata/v1' \
+                  '/instance/attributes/NGINX_CONF_TEMPLATE -H ' \
+                  '"Metadata-Flavor: ' \
                   'Google")' + '\n'
 
         # write temporary files
@@ -96,25 +148,43 @@ class BudgetML:
                   f'{template_dockerfile_location}' + '\n'
         script += f'echo $REQUIREMENTS | base64 --' \
                   f'decode >> {requirements_location}' + '\n'
+        script += f'echo $DOCKER_COMPOSE_TEMPLATE | base64 --decode >> ' \
+                  f'{template_dockercompose_location}' + '\n'
+        script += f'echo $NGINX_CONF_TEMPLATE | base64 --' \
+                  f'decode >> {nginx_conf_location}' + '\n'
 
-        # export enn variables
+        # export env variables
         script += f'export BUDGET_PREDICTOR_PATH=gs://{bucket}/' \
-                  f'{predictor_gcs_path}' + \
-                  '\n'
+                  f'{predictor_gcs_path}' + '\n'
         script += f'export BUDGET_PREDICTOR_ENTRYPOINT={entrypoint}' + '\n'
+        script += f'export BUDGET_DOMAIN={domain}' + '\n'
+        script += f'export BUDGET_SUBDOMAIN={subdomain}' + '\n'
+        script += f'export BUDGET_NGINX_PATH=.{nginx_conf_location}' + '\n'
+        script += f'export BUDGET_CERTS_PATH={certs_path}' + '\n'
+        script += f'export BASE_IMAGE={BUDGETML_BASE_IMAGE_NAME}' + '\n'
 
-        # go into tmp directory
-        script += 'cd /tmp' + '\n'
+        # run docker-compose
+        script += \
+            'docker run ' \
+            f'-e BUDGET_PREDICTOR_PATH=$BUDGET_PREDICTOR_PATH ' \
+            f'-e BUDGET_PREDICTOR_ENTRYPOINT=$BUDGET_PREDICTOR_ENTRYPOINT ' \
+            f'-e BUDGET_DOMAIN=$BUDGET_DOMAIN ' \
+            f'-e BUDGET_SUBDOMAIN=$BUDGET_SUBDOMAIN ' \
+            f'-e BUDGET_NGINX_PATH=$BUDGET_NGINX_PATH ' \
+            f'-e BUDGET_CERTS_PATH=$BUDGET_CERTS_PATH ' \
+            f'-e BASE_IMAGE=$BASE_IMAGE ' \
+            '--rm -v /var/run/docker.sock:/var/run/docker.sock -v ' \
+            '"$PWD:$PWD" -w="$PWD" docker/compose:1.24.0 up -d'
 
         # docker build
-        script += f'docker build -f {template_dockerfile_location} -t ' \
-                  f'{image_name} .' + '\n'
-
-        # docker-run
-        script += f'docker run -d -e ' \
-                  f'BUDGET_PREDICTOR_PATH=$BUDGET_PREDICTOR_PATH -e ' \
-                  f'BUDGET_PREDICTOR_ENTRYPOINT=$BUDGET_PREDICTOR_ENTRYPOINT' \
-                  f' {image_name}' + '\n'
+        # script += f'docker build -f {template_dockerfile_location} -t ' \
+        #           f'{image_name} .' + '\n'
+        #
+        # # docker-run
+        # script += f'docker run -d -e ' \
+        #           f'BUDGET_PREDICTOR_PATH=$BUDGET_PREDICTOR_PATH -e ' \
+        #           f'BUDGET_PREDICTOR_ENTRYPOINT=$BUDGET_PREDICTOR_ENTRYPOINT' \
+        #           f' {image_name}' + '\n'
         logging.debug(f'Startup script: {script}')
         return script
 
@@ -140,28 +210,10 @@ class BudgetML:
                             self.zone, instance_name)
         return function_name
 
-    def get_docker_file_contents(self, dockerfile_path: Text):
-        if dockerfile_path is None:
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            dockerfile_path = os.path.join(base_path, 'template.Dockerfile')
-
-        with open(dockerfile_path, 'r') as f:
-            docker_template_content = f.read()
-            # TODO: Maybe use env variables for this
-            docker_template_content = docker_template_content.replace(
-                "$BASE_IMAGE", BUDGETML_BASE_IMAGE_NAME)
-        return docker_template_content
-
-    def get_requirements_file_contents(self, requirements_path: Text):
-        if requirements_path is None:
-            requirements_content = ''
-        else:
-            with open(requirements_path, 'r') as f:
-                requirements_content = f.read()
-        return requirements_content
-
     def launch(self,
                predictor_class,
+               domain: Text,
+               subdomain: Text = 'budget',
                requirements_path: Text = None,
                dockerfile_path: Text = None,
                bucket_name: Text = None,
@@ -173,6 +225,8 @@ class BudgetML:
         Launches the VM.
 
         :param predictor_class: Class of type budgetml.BasePredictor.
+        :param domain:
+        :param subdomain:
         :param dockerfile_path:
         :param requirements_path:
         :param bucket_name:
@@ -196,7 +250,8 @@ class BudgetML:
 
         cloud_function_name = self.create_cloud_function(instance_name)
 
-        startup_script = self.create_start_up(predictor_class, bucket_name)
+        startup_script = self.create_start_up(
+            predictor_class, bucket_name, domain, subdomain)
         shutdown_script = self.create_shut_down(cloud_function_name)
 
         # create docker template content
@@ -207,11 +262,18 @@ class BudgetML:
         requirements_content = self.get_requirements_file_contents(
             requirements_path)
 
+        docker_compose_content = self.get_docker_compose_contents()
+        nginx_conf_content = self.get_nginx_conf_contents(domain, subdomain)
+
         # encode the files to preserve the structure like newlines
         requirements_content = base64.b64encode(
             requirements_content.encode()).decode()
         docker_template_content = base64.b64encode(
             docker_template_content.encode()).decode()
+        docker_compose_content = base64.b64encode(
+            docker_compose_content.encode()).decode()
+        nginx_conf_content = base64.b64encode(
+            nginx_conf_content.encode()).decode()
 
         logging.info(
             f'Launching GCP Instance {instance_name} with IP: '
@@ -229,6 +291,8 @@ class BudgetML:
             preemptible,
             requirements_content,
             docker_template_content,
+            docker_compose_content,
+            nginx_conf_content,
         )
 
     def launch_local(self,
@@ -308,3 +372,7 @@ class BudgetML:
             volumes=volumes
         )
         print(container.logs())
+
+    # def test(self):
+    #     print(self.get_docker_compose_contents())
+    #     print(self.get_nginx_conf_contents('pichance.com', 'budget'))
