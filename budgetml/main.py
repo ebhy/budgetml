@@ -41,15 +41,14 @@ class BudgetML:
         # Initialize compute REST API client
         self.compute = googleapiclient.discovery.build('compute', 'v1')
 
-    def create_static_ip_if_not_exists(self, static_ip_name: Text):
-        if self.static_ip is None:
-            res = create_static_ip(
-                self.compute,
-                project=self.project,
-                region=self.region,
-                static_ip_name=static_ip_name,
-            )
-            self.static_ip = res['address']
+    def create_static_ip(self, static_ip_name: Text):
+        res = create_static_ip(
+            self.compute,
+            project=self.project,
+            region=self.region,
+            static_ip_name=static_ip_name,
+        )
+        self.static_ip = res['address']
 
     def get_docker_file_contents(self, dockerfile_path: Text):
         if dockerfile_path is None:
@@ -104,16 +103,18 @@ class BudgetML:
         predictor_gcs_path = f'predictors/{self.unique_id}/{entrypoint}.py'
         upload_blob(bucket, file_name, predictor_gcs_path)
 
-        context_dir = '/tmp/budget_base'
+        context_dir = '/home/budgetml'
         template_dockerfile_location = f'{context_dir}/template.Dockerfile'
         requirements_location = f'{context_dir}/custom_requirements.txt'
         template_dockercompose_location = f'{context_dir}/docker-compose.yaml'
         nginx_conf_location = f'{context_dir}/nginx.conf'
-        certs_path = './certs/'
-        image_name = 'budgetml:0.0.1'
+        certs_path = f'{context_dir}/certs/'
 
         # create script
         script = '#!/bin/bash' + '\n'
+
+        # become superuser
+        script += f'sudo -s' + '\n'
 
         # create context
         script += f'mkdir {context_dir}' + '\n'
@@ -159,7 +160,7 @@ class BudgetML:
         script += f'export BUDGET_PREDICTOR_ENTRYPOINT={entrypoint}' + '\n'
         script += f'export BUDGET_DOMAIN={domain}' + '\n'
         script += f'export BUDGET_SUBDOMAIN={subdomain}' + '\n'
-        script += f'export BUDGET_NGINX_PATH=.{nginx_conf_location}' + '\n'
+        script += f'export BUDGET_NGINX_PATH={nginx_conf_location}' + '\n'
         script += f'export BUDGET_CERTS_PATH={certs_path}' + '\n'
         script += f'export BASE_IMAGE={BUDGETML_BASE_IMAGE_NAME}' + '\n'
 
@@ -176,15 +177,6 @@ class BudgetML:
             '--rm -v /var/run/docker.sock:/var/run/docker.sock -v ' \
             '"$PWD:$PWD" -w="$PWD" docker/compose:1.24.0 up -d'
 
-        # docker build
-        # script += f'docker build -f {template_dockerfile_location} -t ' \
-        #           f'{image_name} .' + '\n'
-        #
-        # # docker-run
-        # script += f'docker run -d -e ' \
-        #           f'BUDGET_PREDICTOR_PATH=$BUDGET_PREDICTOR_PATH -e ' \
-        #           f'BUDGET_PREDICTOR_ENTRYPOINT=$BUDGET_PREDICTOR_ENTRYPOINT' \
-        #           f' {image_name}' + '\n'
         logging.debug(f'Startup script: {script}')
         return script
 
@@ -220,7 +212,7 @@ class BudgetML:
                instance_name: Text = None,
                machine_type: Text = 'e2-medium',
                preemptible: bool = True,
-               static_ip_name: Text = None):
+               static_ip: Text = None):
         """
         Launches the VM.
 
@@ -240,13 +232,17 @@ class BudgetML:
         if instance_name is None:
             instance_name = f'budget-instance-' \
                             f'{self.unique_id.replace("_", "-")}'
-        if static_ip_name is None:
-            static_ip_name = f'ip-{instance_name}'
+
+        static_ip_name = f'ip-{instance_name}'
+
+        if static_ip is None:
+            self.create_static_ip(static_ip_name)
+        else:
+            self.static_ip = static_ip
 
         # Create bucket if it doesnt exist
         create_bucket_if_not_exists(bucket_name)
 
-        self.create_static_ip_if_not_exists(static_ip_name)
 
         cloud_function_name = self.create_cloud_function(instance_name)
 

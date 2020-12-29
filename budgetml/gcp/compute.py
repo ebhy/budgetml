@@ -42,6 +42,12 @@ def create_instance(compute, project, zone, static_ip, instance_name,
 
         'scheduling': {'preemptible': preemptible},
 
+        'tags': {
+            'items': [
+                'http-server',
+                'https-server'
+            ]
+        },
         # Specify the boot disk and the image to use as a source.
         'disks': [
             {

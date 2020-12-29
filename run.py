@@ -8,6 +8,7 @@ budgetml = BudgetML(
 budgetml.launch(
     FastSRGANPredictor,
     domain='pichance.com',
-    subdomain='budget',
-    requirements_path='/home/hamza/workspace/personal/budgetml/fastsrgan_requirements.txt'
+    subdomain='api',
+    requirements_path='/home/hamza/workspace/personal/budgetml/fastsrgan_requirements.txt',
+    static_ip='35.224.253.145'
 )

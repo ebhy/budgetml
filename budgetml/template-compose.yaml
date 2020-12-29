@@ -14,6 +14,7 @@ services:
             - SUBDOMAINS=${BUDGET_SUBDOMAIN},
             - VALIDATION=http
             - STAGING=false #optional
+            - ONLY_SUBDOMAINS=true
         volumes:
             - ${BUDGET_NGINX_PATH}:/config/nginx/proxy-confs/app.subdomain.conf
             - ${BUDGET_CERTS_PATH}:/config/etc/letsencrypt/
