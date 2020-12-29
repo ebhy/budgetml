@@ -49,6 +49,7 @@ class BudgetML:
             static_ip_name=static_ip_name,
         )
         self.static_ip = res['address']
+        return self.static_ip
 
     def get_docker_file_contents(self, dockerfile_path: Text):
         if dockerfile_path is None:
@@ -243,7 +244,6 @@ class BudgetML:
         # Create bucket if it doesnt exist
         create_bucket_if_not_exists(bucket_name)
 
-
         cloud_function_name = self.create_cloud_function(instance_name)
 
         startup_script = self.create_start_up(
@@ -368,7 +368,3 @@ class BudgetML:
             volumes=volumes
         )
         print(container.logs())
-
-    # def test(self):
-    #     print(self.get_docker_compose_contents())
-    #     print(self.get_nginx_conf_contents('pichance.com', 'budget'))
