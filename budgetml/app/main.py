@@ -2,7 +2,6 @@ import logging
 import os
 import traceback
 from typing import Type, Optional
-from uuid import uuid4
 
 import uvicorn
 from fastapi import Depends, FastAPI, File, UploadFile, HTTPException
@@ -55,9 +54,6 @@ async def startup_event():
     global PREDICTOR
     global USERS_DB
 
-    # Generating a unique token per session
-    os.environ['BUDGET_TOKEN'] = str(uuid4())
-
     # Setting auth creds
     USERS_DB = {
         'username': os.environ['BUDGET_USERNAME'],
@@ -90,10 +86,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     global USERS_DB
     if form_data.username == USERS_DB['username'] \
             and form_data.password == USERS_DB['password']:
-        return {"access_token": os.environ['BUDGET_TOKEN'],
-                "token_type": "bearer"}
-    raise HTTPException(status_code=400,
-                        detail="Incorrect username or password")
+        return {
+            "access_token": os.getenv('BUDGET_TOKEN'),
+            "token_type": "bearer"
+        }
+    raise HTTPException(
+        status_code=400, detail="Incorrect username or password")
 
 
 @app.post("/predict/")
@@ -150,4 +148,5 @@ async def predict_dict(request: Payload,
 if __name__ == "__main__":
     os.environ['BUDGET_USERNAME'] = 'username'
     os.environ['BUDGET_PWD'] = 'password'
+    os.environ['BUDGET_TOKEN'] = 'token'
     uvicorn.run(app, host="0.0.0.0", port=8000)

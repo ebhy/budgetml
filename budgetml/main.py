@@ -374,20 +374,20 @@ class BudgetML:
             tag=tag,
         )
 
-        # stream logs
-        while True:
-            try:
-                output = generator.__next__
-                output = output.strip('\r\n')
-                json_output = json.loads(output)
-                if 'stream' in json_output:
-                    logging.debug(json_output['stream'].strip('\n'))
-            except StopIteration:
-                logging.debug("Docker image build complete.")
-                break
-            except ValueError:
-                logging.debug(f"Error parsing output from docker image "
-                              f"build: {output}")
+        # # stream logs
+        # while True:
+        #     try:
+        #         output = generator.__next__
+        #         output = output.strip('\r\n')
+        #         json_output = json.loads(output)
+        #         if 'stream' in json_output:
+        #             logging.debug(json_output['stream'].strip('\n'))
+        #     except StopIteration:
+        #         logging.debug("Docker image build complete.")
+        #         break
+        #     except ValueError:
+        #         logging.debug(f"Error parsing output from docker image "
+        #                       f"build: {output}")
 
         file_name = inspect.getfile(predictor_class)
         entrypoint = predictor_class.__name__
@@ -400,7 +400,7 @@ class BudgetML:
         BUDGET_PREDICTOR_ENTRYPOINT = predictor_class.__name__
 
         credentials_path = '/app/sa.json'
-        ports = {'80/tcp': 8080}
+        ports = {'80/tcp': 8000}
 
         environment = [
             f"BUDGET_PREDICTOR_PATH={BUDGET_PREDICTOR_PATH}",
@@ -422,7 +422,7 @@ class BudgetML:
             f"BUDGET_PREDICTOR_ENTRYPOINT=" \
             f"{BUDGET_PREDICTOR_ENTRYPOINT} -e " \
             f"GOOGLE_APPLICATION_CREDENTIALS=/app/sa.json -p " \
-            f"8080:8000 -v " \
+            f"8000:80 -v " \
             f"{os.environ['GOOGLE_APPLICATION_CREDENTIALS']}:/app/sa.json " \
             f"{tag}"
 
@@ -437,5 +437,5 @@ class BudgetML:
             volumes=volumes
         )
         logging.debug(container.logs())
-        logging.info(f'Username: {username}. Password: {password}')
+        logging.info(f'Username: {username}\t Password: {password}')
         return username, password
