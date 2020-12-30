@@ -33,6 +33,7 @@ services:
             - BUDGET_PREDICTOR_ENTRYPOINT=${BUDGET_PREDICTOR_ENTRYPOINT}
             - BUDGET_USERNAME=${BUDGET_USERNAME}
             - BUDGET_PWD=${BUDGET_PWD}
+            - GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS}
         build:
             context: .
             dockerfile: template.Dockerfile

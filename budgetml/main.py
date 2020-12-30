@@ -1,6 +1,5 @@
 import base64
 import inspect
-import json
 import logging
 import os
 import pathlib
@@ -186,6 +185,12 @@ class BudgetML:
         script += f'export BUDGET_CERTS_PATH={certs_path}' + '\n'
         script += f'export BASE_IMAGE={BUDGETML_BASE_IMAGE_NAME}' + '\n'
 
+        # This generates a unique token for this instance and passes to
+        # gunicorn to be picked up later in app:main
+        script += \
+            f'export GUNICORN_CMD_ARGS="--env BUDGET_TOKEN={str(uuid4())}"' \
+                  + '\n'
+
         # run docker-compose
         script += \
             'docker run ' \
@@ -198,6 +203,7 @@ class BudgetML:
             f'-e BUDGET_NGINX_PATH=$BUDGET_NGINX_PATH ' \
             f'-e BUDGET_CERTS_PATH=$BUDGET_CERTS_PATH ' \
             f'-e BASE_IMAGE=$BASE_IMAGE ' \
+            f'-e GUNICORN_CMD_ARGS=$GUNICORN_CMD_ARGS' \
             '--rm -v /var/run/docker.sock:/var/run/docker.sock -v ' \
             '"$PWD:$PWD" -w="$PWD" docker/compose:1.24.0 up -d'
 
@@ -424,6 +430,7 @@ class BudgetML:
             f"GOOGLE_APPLICATION_CREDENTIALS=/app/sa.json -p " \
             f"8000:80 -v " \
             f"{os.environ['GOOGLE_APPLICATION_CREDENTIALS']}:/app/sa.json " \
+            f'GUNICORN_CMD_ARGS="--env BUDGET_TOKEN={str(uuid4())}"' \
             f"{tag}"
 
         logging.debug(f"To run it natively, you can use: {docker_cmd}")
