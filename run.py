@@ -1,5 +1,5 @@
 from budgetml import BudgetML
-from fastsrgan_predictor import FastSRGANPredictor
+from examples.fastsrgan.predictor import FastSRGANPredictor
 
 DOMAIN = 'pichance.com'
 SUBDOMAIN = 'model'
@@ -8,7 +8,7 @@ budgetml = BudgetML(
     project='budgetml'
 )
 
-# IP_ADDRESS = budgetml.create_static_ip('pichance_static_ip')
+# IP_ADDRESS = budgetml.create_static_ip('pichance-static-ip')
 # Create an A record that maps SUBDOMAIN.DOMAIN to IP_ADDRESS
 
 budgetml.launch(
@@ -16,7 +16,6 @@ budgetml.launch(
     machine_type='e2-highmem-2',
     domain=DOMAIN,
     subdomain=SUBDOMAIN,
-    requirements_path='/home/hamza/workspace/personal/budgetml'
-                      '/fastsrgan_requirements.txt',
+    requirements_path='examples/fastsrgan/fastsrgan_requirements.txt',
     static_ip='35.224.253.145'
 )
