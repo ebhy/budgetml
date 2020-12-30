@@ -16,6 +16,6 @@ budgetml.launch(
     machine_type='e2-highmem-2',
     domain=DOMAIN,
     subdomain=SUBDOMAIN,
-    requirements_path='examples/fastsrgan/fastsrgan_requirements.txt',
+    requirements_path='examples/fastsrgan/requirements.txt',
     static_ip='35.224.253.145'
 )
