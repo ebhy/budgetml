@@ -74,3 +74,12 @@ def create_cloud_function(project, region, function_name,
         body=config).execute()
     logging.debug(f'Function {function_name} created. Response: {res}')
     return res
+
+
+def delete_cloud_function(project, region, function_name):
+    parent = 'projects/{}/locations/{}'.format(project, region)
+    full_name = f'{parent}/functions/{function_name}'
+    res = get_api().delete(
+        name=full_name).execute()
+    logging.debug(f'Function {function_name} deleted. Response: {res}')
+    return res
