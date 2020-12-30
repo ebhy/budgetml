@@ -5,7 +5,7 @@ import logging
 import os
 import pathlib
 import subprocess
-from typing import Text
+from typing import Text, Any
 from uuid import uuid4
 
 import docker
@@ -104,7 +104,13 @@ class BudgetML:
                 "$BUDGET_DOMAIN", f'{subdomain}.{domain}')
             return nginx_config_content
 
-    def create_start_up(self, predictor_class, bucket, domain, subdomain):
+    def create_start_up(self,
+                        predictor_class: Any,
+                        bucket: Text,
+                        domain: Text,
+                        subdomain: Text,
+                        username: Text,
+                        password: Text):
         file_name = inspect.getfile(predictor_class)
         entrypoint = predictor_class.__name__
 
@@ -170,6 +176,8 @@ class BudgetML:
                   f'{predictor_gcs_path}' + '\n'
         script += f'export BUDGET_PREDICTOR_ENTRYPOINT={entrypoint}' + '\n'
         script += f'export BUDGET_DOMAIN={domain}' + '\n'
+        script += f'export BUDGET_USERNAME={username}' + '\n'
+        script += f'export BUDGET_PWD={password}' + '\n'
         script += f'export BUDGET_SUBDOMAIN={subdomain}' + '\n'
         script += f'export BUDGET_NGINX_PATH={nginx_conf_location}' + '\n'
         script += f'export BUDGET_CERTS_PATH={certs_path}' + '\n'
@@ -180,6 +188,8 @@ class BudgetML:
             'docker run ' \
             f'-e BUDGET_PREDICTOR_PATH=$BUDGET_PREDICTOR_PATH ' \
             f'-e BUDGET_PREDICTOR_ENTRYPOINT=$BUDGET_PREDICTOR_ENTRYPOINT ' \
+            f'-e BUDGET_USERNAME=$BUDGET_USERNAME ' \
+            f'-e BUDGET_PWD=$BUDGET_PWD ' \
             f'-e BUDGET_DOMAIN=$BUDGET_DOMAIN ' \
             f'-e BUDGET_SUBDOMAIN=$BUDGET_SUBDOMAIN ' \
             f'-e BUDGET_NGINX_PATH=$BUDGET_NGINX_PATH ' \
@@ -217,6 +227,8 @@ class BudgetML:
                predictor_class,
                domain: Text,
                subdomain: Text = 'budget',
+               username: Text = 'budget',
+               password: Text = str(uuid4()),
                requirements_path: Text = None,
                dockerfile_path: Text = None,
                bucket_name: Text = None,
@@ -230,6 +242,8 @@ class BudgetML:
         :param predictor_class: Class of type budgetml.BasePredictor.
         :param domain:
         :param subdomain:
+        :param username:
+        :param password:
         :param dockerfile_path:
         :param requirements_path:
         :param bucket_name:
@@ -257,7 +271,13 @@ class BudgetML:
         cloud_function_name = self.create_cloud_function(instance_name)
 
         startup_script = self.create_start_up(
-            predictor_class, bucket_name, domain, subdomain)
+            predictor_class,
+            bucket_name,
+            domain,
+            subdomain,
+            username,
+            password)
+
         shutdown_script = self.create_shut_down(cloud_function_name)
 
         # create docker template content
@@ -305,7 +325,9 @@ class BudgetML:
                      predictor_class,
                      requirements_path: Text = None,
                      dockerfile_path: Text = None,
-                     bucket_name: Text = None):
+                     bucket_name: Text = None,
+                     username: Text = 'budget',
+                     password: Text = str(uuid4())):
 
         # Create bucket if it doesnt exist
         if bucket_name is None:
@@ -375,10 +397,13 @@ class BudgetML:
         credentials_path = '/app/sa.json'
         ports = {'80/tcp': 8080}
 
-        environment = [f"BUDGET_PREDICTOR_PATH={BUDGET_PREDICTOR_PATH}",
-                       f'BUDGET_PREDICTOR_ENTRYPOINT='
-                       f'{BUDGET_PREDICTOR_ENTRYPOINT}',
-                       f'GOOGLE_APPLICATION_CREDENTIALS={credentials_path}']
+        environment = [
+            f"BUDGET_PREDICTOR_PATH={BUDGET_PREDICTOR_PATH}",
+            f'BUDGET_PREDICTOR_ENTRYPOINT={BUDGET_PREDICTOR_ENTRYPOINT}',
+            f'BUDGET_USERNAME={username}',
+            f'BUDGET_PWD={password}',
+            f'GOOGLE_APPLICATION_CREDENTIALS={credentials_path}'
+        ]
 
         volumes = {os.environ['GOOGLE_APPLICATION_CREDENTIALS']: {
             'bind': f'{credentials_path}', 'mode': 'ro'}}

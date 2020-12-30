@@ -31,6 +31,8 @@ services:
         environment:
             - BUDGET_PREDICTOR_PATH=${BUDGET_PREDICTOR_PATH}
             - BUDGET_PREDICTOR_ENTRYPOINT=${BUDGET_PREDICTOR_ENTRYPOINT}
+            - BUDGET_USERNAME=${BUDGET_USERNAME}
+            - BUDGET_PWD=${BUDGET_PWD}
         build:
             context: .
             dockerfile: template.Dockerfile
