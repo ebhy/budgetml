@@ -147,6 +147,7 @@ class BudgetML:
                   '' \
                   '' \
                   '' \
+                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -187,9 +188,7 @@ class BudgetML:
 
         # This generates a unique token for this instance and passes to
         # gunicorn to be picked up later in app:main
-        script += \
-            f'export GUNICORN_CMD_ARGS="--env BUDGET_TOKEN={str(uuid4())}"' \
-                  + '\n'
+        script += f'export BUDGET_TOKEN={str(uuid4())}' + '\n'
 
         # run docker-compose
         script += \
@@ -203,7 +202,7 @@ class BudgetML:
             f'-e BUDGET_NGINX_PATH=$BUDGET_NGINX_PATH ' \
             f'-e BUDGET_CERTS_PATH=$BUDGET_CERTS_PATH ' \
             f'-e BASE_IMAGE=$BASE_IMAGE ' \
-            f'-e GUNICORN_CMD_ARGS=$GUNICORN_CMD_ARGS' \
+            f'-e BUDGET_TOKEN=$BUDGET_TOKEN' \
             '--rm -v /var/run/docker.sock:/var/run/docker.sock -v ' \
             '"$PWD:$PWD" -w="$PWD" docker/compose:1.24.0 up -d'
 
@@ -408,12 +407,15 @@ class BudgetML:
         credentials_path = '/app/sa.json'
         ports = {'80/tcp': 8000}
 
+        token = str(uuid4())
+
         environment = [
             f"BUDGET_PREDICTOR_PATH={BUDGET_PREDICTOR_PATH}",
             f'BUDGET_PREDICTOR_ENTRYPOINT={BUDGET_PREDICTOR_ENTRYPOINT}',
             f'BUDGET_USERNAME={username}',
             f'BUDGET_PWD={password}',
-            f'GOOGLE_APPLICATION_CREDENTIALS={credentials_path}'
+            f'GOOGLE_APPLICATION_CREDENTIALS={credentials_path}',
+            f'BUDGET_TOKEN={token}'
         ]
 
         volumes = {os.environ['GOOGLE_APPLICATION_CREDENTIALS']: {
@@ -427,13 +429,14 @@ class BudgetML:
             f"{BUDGET_PREDICTOR_PATH} -e " \
             f"BUDGET_PREDICTOR_ENTRYPOINT=" \
             f"{BUDGET_PREDICTOR_ENTRYPOINT} -e " \
+            f'BUDGET_TOKEN="{token}" -e ' \
+            f'BUDGET_USERNAME="{username}" -e ' \
+            f'BUDGET_PWD="{password}" -e ' \
             f"GOOGLE_APPLICATION_CREDENTIALS=/app/sa.json -p " \
             f"8000:80 -v " \
             f"{os.environ['GOOGLE_APPLICATION_CREDENTIALS']}:/app/sa.json " \
-            f'GUNICORN_CMD_ARGS="--env BUDGET_TOKEN={str(uuid4())}"' \
             f"{tag}"
-
-        logging.debug(f"To run it natively, you can use: {docker_cmd}")
+        logging.debug(f"To run it natively, you can use: \n{docker_cmd}")
         container = client.containers.run(
             tag,
             ports=ports,

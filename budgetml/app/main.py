@@ -67,10 +67,9 @@ async def startup_event():
         ENV_PREDICTOR_ENTRYPOINT = os.getenv('BUDGET_PREDICTOR_ENTRYPOINT',
                                              'Predictor')
         # Load predictor
-        args = {}
         predictor_class: Type[BasePredictor] = get_predictor_class(
             PREDICTOR_CLASS_PATH, ENV_PREDICTOR_ENTRYPOINT)
-        PREDICTOR = predictor_class(args)
+        PREDICTOR = predictor_class().load()
     except Exception as e:
         logging.debug(f"Predictor class could not be loaded with: {str(e)}")
         traceback.print_exc()

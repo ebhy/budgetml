@@ -9,7 +9,7 @@ from models import Payload
 
 
 class BasePredictor:
-    def __init__(self, args: Dict):
+    def load(self):
         """Called once during each worker initialization. Performs
         setup such as downloading/initializing the model or downloading a
         vocabulary.

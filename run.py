@@ -2,7 +2,7 @@ from budgetml import BudgetML
 from fastsrgan_predictor import FastSRGANPredictor
 
 DOMAIN = 'pichance.com'
-SUBDOMAIN = 'api'
+SUBDOMAIN = 'model'
 
 budgetml = BudgetML(
     project='budgetml'
@@ -13,6 +13,7 @@ budgetml = BudgetML(
 
 budgetml.launch(
     FastSRGANPredictor,
+    machine_type='e2-highmem-2',
     domain=DOMAIN,
     subdomain=SUBDOMAIN,
     requirements_path='/home/hamza/workspace/personal/budgetml'
