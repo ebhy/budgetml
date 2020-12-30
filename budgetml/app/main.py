@@ -2,6 +2,7 @@ import logging
 import os
 import traceback
 from typing import Type, Optional
+from uuid import uuid4
 
 import uvicorn
 from fastapi import Depends, FastAPI, File, UploadFile, HTTPException
@@ -13,7 +14,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from basepredictor import BasePredictor
 from load import get_predictor_class
-from models import Payload, User
+from models import Payload
 
 app = FastAPI()
 
@@ -27,30 +28,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# predictor
+# globals
 PREDICTOR: Optional[BasePredictor] = None
+USERS_DB = {}
 
 # auth
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-users_db = {
-    "username": "johndoe",
-    "full_name": "John Doe",
-    "email": "johndoe@example.com",
-    "hashed_password": "fakehashedsecret",
-    "disabled": False,
-}
-
-
-def fake_decode_token(token):
-    return User(
-        username=token + "fakedecoded", email="john@example.com",
-        full_name="John Doe"
-    )
-
-
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    user = fake_decode_token(token)
-    return user
 
 
 async def verify(token: str = Depends(oauth2_scheme)):
@@ -70,6 +53,16 @@ async def verify(token: str = Depends(oauth2_scheme)):
 @app.on_event("startup")
 async def startup_event():
     global PREDICTOR
+    global USERS_DB
+
+    # Generating a unique token per session
+    os.environ['BUDGET_TOKEN'] = str(uuid4())
+
+    # Setting auth creds
+    USERS_DB = {
+        'username': os.environ['BUDGET_USERNAME'],
+        'password': os.environ['BUDGET_PWD'],
+    }
 
     try:
         PREDICTOR_CLASS_PATH = os.getenv('BUDGET_PREDICTOR_PATH')
@@ -83,7 +76,7 @@ async def startup_event():
             PREDICTOR_CLASS_PATH, ENV_PREDICTOR_ENTRYPOINT)
         PREDICTOR = predictor_class(args)
     except Exception as e:
-        logging.debug(f"Predicto class could not be loaded with: {str(e)}")
+        logging.debug(f"Predictor class could not be loaded with: {str(e)}")
         traceback.print_exc()
 
 
@@ -94,21 +87,18 @@ def health_check():
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user_dict = users_db.get(form_data.username)
-    if not user_dict:
-        raise HTTPException(status_code=400,
-                            detail="Incorrect username or password")
-    hashed_password = fake_hash_password(form_data.password)
-    if not hashed_password == user.hashed_password:
-        raise HTTPException(status_code=400,
-                            detail="Incorrect username or password")
-
-    return {"access_token": user.username, "token_type": "bearer"}
+    global USERS_DB
+    if form_data.username == USERS_DB['username'] \
+            and form_data.password == USERS_DB['password']:
+        return {"access_token": os.environ['BUDGET_TOKEN'],
+                "token_type": "bearer"}
+    raise HTTPException(status_code=400,
+                        detail="Incorrect username or password")
 
 
 @app.post("/predict/")
 async def predict(request: Request,
-                  _: str = Depends(get_current_user)) -> Response:
+                  _: str = Depends(verify)) -> Response:
     global PREDICTOR
     if PREDICTOR is None:
         raise HTTPException(
@@ -121,7 +111,7 @@ async def predict(request: Request,
 
 @app.post("/predict_image/")
 async def predict_image(request: UploadFile = File(...),
-                        _: str = Depends(get_current_user)) -> Response:
+                        _: str = Depends(verify)) -> Response:
     """
     https://fastapi.tiangolo.com/tutorial/request-files/
 
@@ -140,7 +130,7 @@ async def predict_image(request: UploadFile = File(...),
 
 @app.post("/predict_dict/")
 async def predict_dict(request: Payload,
-                       _: str = Depends(get_current_user)) -> Response:
+                       _: str = Depends(verify)) -> Response:
     """
     Request is Payload type which has a dict.
 
@@ -158,4 +148,6 @@ async def predict_dict(request: Payload,
 
 
 if __name__ == "__main__":
+    os.environ['BUDGET_USERNAME'] = 'username'
+    os.environ['BUDGET_PWD'] = 'password'
     uvicorn.run(app, host="0.0.0.0", port=8000)
