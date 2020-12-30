@@ -6,6 +6,7 @@ import pathlib
 import subprocess
 from typing import Text
 from uuid import uuid4
+import json
 
 import docker
 import googleapiclient.discovery
@@ -329,11 +330,28 @@ class BudgetML:
         client = docker.from_env()
         tag = 'budget_local'
 
-        client.images.build(
+        logging.debug('Building docker image..')
+
+        generator = client.images.build(
             path=tmp_dir,
             dockerfile='template.Dockerfile',
             tag=tag,
         )
+
+        # stream logs
+        while True:
+            try:
+                output = generator.__next__
+                output = output.strip('\r\n')
+                json_output = json.loads(output)
+                if 'stream' in json_output:
+                    logging.debug(json_output['stream'].strip('\n'))
+            except StopIteration:
+                logging.debug("Docker image build complete.")
+                break
+            except ValueError:
+                logging.debug(f"Error parsing output from docker image "
+                              f"build: {output}")
 
         file_name = inspect.getfile(predictor_class)
         entrypoint = predictor_class.__name__
@@ -367,4 +385,4 @@ class BudgetML:
             name=tag,
             volumes=volumes
         )
-        print(container.logs())
+        logging.debug(container.logs())

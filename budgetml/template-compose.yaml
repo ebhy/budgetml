@@ -1,9 +1,9 @@
 ---
 version: "2"
 services:
-    letsencrypt:
-        image: linuxserver/letsencrypt
-        container_name: letsencrypt
+    swag:
+        image: ghcr.io/linuxserver/swag
+        container_name: swag
         cap_add:
             - NET_ADMIN
         environment:

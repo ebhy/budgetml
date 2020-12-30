@@ -1,8 +1,11 @@
 from abc import abstractmethod
-from typing import Dict
+from typing import Dict, Union
 
+from fastapi import UploadFile
 from starlette.requests import Request
 from starlette.responses import Response
+
+from models import Payload
 
 
 class BasePredictor:
@@ -17,7 +20,9 @@ class BasePredictor:
         pass
 
     @abstractmethod
-    async def predict(self, request: Request) -> Response:
+    async def predict(self,
+                      request: Union[
+                          Request, UploadFile, Payload]) -> Response:
         """Responsible for running the inference.
 
         Args:
