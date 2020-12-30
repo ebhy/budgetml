@@ -1,18 +1,18 @@
 import base64
 import inspect
+import json
 import logging
 import os
 import pathlib
 import subprocess
 from typing import Text
 from uuid import uuid4
-import json
 
 import docker
 import googleapiclient.discovery
 
 from budgetml.constants import BUDGETML_BASE_IMAGE_NAME
-from budgetml.gcp.addresses import create_static_ip
+from budgetml.gcp.addresses import create_static_ip, release_static_ip
 from budgetml.gcp.compute import create_instance
 from budgetml.gcp.function import create_cloud_function as create_gcp_function
 from budgetml.gcp.storage import upload_blob, create_bucket_if_not_exists
@@ -31,13 +31,12 @@ class BudgetML:
         self.project = project
         self.zone = zone
         self.unique_id = unique_id
+        self.region = region
 
         if static_ip is None:
             self.static_ip = None
         else:
             self.static_ip = static_ip
-
-        self.region = region
 
         # Initialize compute REST API client
         self.compute = googleapiclient.discovery.build('compute', 'v1')
@@ -51,6 +50,14 @@ class BudgetML:
         )
         self.static_ip = res['address']
         return self.static_ip
+
+    def release_static_ip(self, static_ip: Text):
+        return release_static_ip(
+            self.compute,
+            project=self.project,
+            region=self.region,
+            static_ip=static_ip,
+        )
 
     def get_docker_file_contents(self, dockerfile_path: Text):
         if dockerfile_path is None:
@@ -128,6 +135,8 @@ class BudgetML:
         script += 'export DOCKER_TEMPLATE=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
                   '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
+                  '' \
+                  '' \
                   '' \
                   '' \
                   'Google")' + '\n'

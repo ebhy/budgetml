@@ -4,14 +4,16 @@ import traceback
 from typing import Type, Optional
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import Depends, FastAPI, File, UploadFile, HTTPException
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 from basepredictor import BasePredictor
 from load import get_predictor_class
-from models import Payload
+from models import Payload, User
 
 app = FastAPI()
 
@@ -27,6 +29,42 @@ app.add_middleware(
 
 # predictor
 PREDICTOR: Optional[BasePredictor] = None
+
+# auth
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+users_db = {
+    "username": "johndoe",
+    "full_name": "John Doe",
+    "email": "johndoe@example.com",
+    "hashed_password": "fakehashedsecret",
+    "disabled": False,
+}
+
+
+def fake_decode_token(token):
+    return User(
+        username=token + "fakedecoded", email="john@example.com",
+        full_name="John Doe"
+    )
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    user = fake_decode_token(token)
+    return user
+
+
+async def verify(token: str = Depends(oauth2_scheme)):
+    try:
+        if token == os.getenv('BUDGET_TOKEN'):
+            return token
+        raise Exception
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials with error {}".format(
+                str(e)),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 @app.on_event("startup")
@@ -54,8 +92,23 @@ def health_check():
     return {"I'm": "Alive!"}
 
 
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user_dict = users_db.get(form_data.username)
+    if not user_dict:
+        raise HTTPException(status_code=400,
+                            detail="Incorrect username or password")
+    hashed_password = fake_hash_password(form_data.password)
+    if not hashed_password == user.hashed_password:
+        raise HTTPException(status_code=400,
+                            detail="Incorrect username or password")
+
+    return {"access_token": user.username, "token_type": "bearer"}
+
+
 @app.post("/predict/")
-async def predict(request: Request) -> Response:
+async def predict(request: Request,
+                  _: str = Depends(get_current_user)) -> Response:
     global PREDICTOR
     if PREDICTOR is None:
         raise HTTPException(
@@ -67,7 +120,8 @@ async def predict(request: Request) -> Response:
 
 
 @app.post("/predict_image/")
-async def predict_image(request: UploadFile = File(...)) -> Response:
+async def predict_image(request: UploadFile = File(...),
+                        _: str = Depends(get_current_user)) -> Response:
     """
     https://fastapi.tiangolo.com/tutorial/request-files/
 
@@ -85,7 +139,8 @@ async def predict_image(request: UploadFile = File(...)) -> Response:
 
 
 @app.post("/predict_dict/")
-async def predict_dict(request: Payload) -> Response:
+async def predict_dict(request: Payload,
+                       _: str = Depends(get_current_user)) -> Response:
     """
     Request is Payload type which has a dict.
 

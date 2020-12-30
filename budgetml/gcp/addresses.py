@@ -42,3 +42,13 @@ def create_static_ip(compute, project, region, static_ip_name):
     res = req.execute()
     logging.debug(f'Static IP {static_ip_name} created with response: {res}')
     return res
+
+
+def release_static_ip(compute, project, region, static_ip):
+    req = compute.addresses().delete(
+        project=project,
+        region=region,
+        address=static_ip)
+    res = req.execute()
+    logging.debug(f'Static IP {static_ip} deleted with response: {res}')
+    return res
