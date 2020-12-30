@@ -202,7 +202,7 @@ class BudgetML:
             f'-e BUDGET_NGINX_PATH=$BUDGET_NGINX_PATH ' \
             f'-e BUDGET_CERTS_PATH=$BUDGET_CERTS_PATH ' \
             f'-e BASE_IMAGE=$BASE_IMAGE ' \
-            f'-e BUDGET_TOKEN=$BUDGET_TOKEN' \
+            f'-e BUDGET_TOKEN=$BUDGET_TOKEN ' \
             '--rm -v /var/run/docker.sock:/var/run/docker.sock -v ' \
             '"$PWD:$PWD" -w="$PWD" docker/compose:1.24.0 up -d'
 
