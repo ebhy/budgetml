@@ -146,6 +146,8 @@ class BudgetML:
                   '' \
                   '' \
                   '' \
+                  '' \
+                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -413,6 +415,18 @@ class BudgetML:
         logging.debug(
             f'Running docker container {tag} with env: {environment}, '
             f'ports: {ports}, volumes: {volumes}')
+
+        docker_cmd = \
+            f"docker run -it -e BUDGET_PREDICTOR_PATH=" \
+            f"{BUDGET_PREDICTOR_PATH} -e " \
+            f"BUDGET_PREDICTOR_ENTRYPOINT=" \
+            f"{BUDGET_PREDICTOR_ENTRYPOINT} -e " \
+            f"GOOGLE_APPLICATION_CREDENTIALS=/app/sa.json -p " \
+            f"8080:8000 -v " \
+            f"{os.environ['GOOGLE_APPLICATION_CREDENTIALS']}:/app/sa.json " \
+            f"{tag}"
+
+        logging.debug(f"To run it natively, you can use: {docker_cmd}")
         container = client.containers.run(
             tag,
             ports=ports,
