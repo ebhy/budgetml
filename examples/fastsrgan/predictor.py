@@ -9,7 +9,7 @@ from fastapi import UploadFile, File
 from google.cloud import storage
 from starlette.responses import Response, FileResponse
 from tensorflow import keras
-
+from budgetml.basepredictor import BasePredictor
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
     """Downloads a blob from the bucket."""
@@ -42,7 +42,7 @@ def check_size(img):
     return True
 
 
-class FastSRGANPredictor:
+class FastSRGANPredictor(BasePredictor):
     def load(self):
         # Fast model
         with tempfile.NamedTemporaryFile() as f:

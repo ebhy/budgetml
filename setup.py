@@ -35,15 +35,17 @@ setup(
                  "docs"]),
     version=version,
     install_requires=[
-
+        "google-api-python-client==1.12.8",
+        "google-cloud-storage==1.35.0",
+        "docker==4.4.1",
     ],
     python_requires=">=3.6, <3.9.0",
     license='Apache License 2.0',  # noqa
     author='ebhy Inc.',
     author_email='htahir111@gmail.com',
-    url='https://budgetml.io/',
+    url='https://github.com/ebhy/budgetml',
     keywords=[
-        "deploy", "machine learning", "deep learning", "inference"
+        "deploy", "machine learning", "deep learning", "inference", "api"
     ],
     # See https://PyPI.python.org/PyPI?%3Aaction=list_classifiers
     classifiers=[
@@ -65,7 +67,10 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3.6',
     ],
-    # add .html file for statistics
-    data_files=[],
+
+    data_files=[
+        ('budgetml/template.Dockerfile', ['budgetml/template.Dockerfile']),
+        ('budgetml/template-compose.yaml', ['budgetml/template-compose.yaml']),
+        ('budgetml/template-nginx.conf', ['budgetml/template-nginx.conf'])],
     include_package_data=True
 )

@@ -6,7 +6,7 @@ from tempfile import TemporaryFile
 import googleapiclient.discovery
 import requests
 
-from budgetml import orchestrator
+from budgetml import autostarter
 
 
 def get_api():
@@ -32,7 +32,7 @@ def create_upload_url(parent):
 
     with TemporaryFile() as data:
         with zipfile.ZipFile(data, 'w', zipfile.ZIP_DEFLATED) as archive:
-            zipdir(orchestrator.__path__[0], archive)
+            zipdir(autostarter.__path__[0], archive)
         data.seek(0)
         headers = {
             'content-type': 'application/zip',

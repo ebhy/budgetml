@@ -1,7 +1,7 @@
 import logging
 import os
 import traceback
-from typing import Type, Optional
+from typing import Type, Optional, Any
 
 import uvicorn
 from fastapi import Depends, FastAPI, File, UploadFile, HTTPException
@@ -11,7 +11,6 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from basepredictor import BasePredictor
 from load import get_predictor_class
 from models import Payload
 
@@ -28,7 +27,7 @@ app.add_middleware(
 )
 
 # globals
-PREDICTOR: Optional[BasePredictor] = None
+PREDICTOR: Optional[Any] = None
 USERS_DB = {}
 
 # auth
@@ -67,7 +66,7 @@ async def startup_event():
         ENV_PREDICTOR_ENTRYPOINT = os.getenv('BUDGET_PREDICTOR_ENTRYPOINT',
                                              'Predictor')
         # Load predictor
-        predictor_class: Type[BasePredictor] = get_predictor_class(
+        predictor_class: Type[Any] = get_predictor_class(
             PREDICTOR_CLASS_PATH, ENV_PREDICTOR_ENTRYPOINT)
         PREDICTOR = predictor_class().load()
     except Exception as e:
