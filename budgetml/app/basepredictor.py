@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, Union
+from typing import Union
 
 from fastapi import UploadFile
 from starlette.requests import Request
