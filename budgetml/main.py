@@ -145,6 +145,7 @@ class BudgetML:
                   '' \
                   '' \
                   '' \
+                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -320,6 +321,8 @@ class BudgetML:
             docker_compose_content,
             nginx_conf_content,
         )
+        logging.info(f'Username: {username}. Password: {password}')
+        return username, password
 
     def launch_local(self,
                      predictor_class,
@@ -420,3 +423,5 @@ class BudgetML:
             volumes=volumes
         )
         logging.debug(container.logs())
+        logging.info(f'Username: {username}. Password: {password}')
+        return username, password
