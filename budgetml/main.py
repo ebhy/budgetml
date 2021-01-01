@@ -3,7 +3,6 @@ import inspect
 import logging
 import os
 import pathlib
-import subprocess
 from typing import Text, Any
 from uuid import uuid4
 
@@ -141,13 +140,6 @@ class BudgetML:
                   'http://metadata.google.internal/computeMetadata/v1' \
                   '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
                   '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
-                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -190,6 +182,9 @@ class BudgetML:
         # gunicorn to be picked up later in app:main
         script += f'export BUDGET_TOKEN={str(uuid4())}' + '\n'
 
+        # download gcloud
+        script += f'docker pull google/cloud-sdk:321.0.0' + '\n'
+
         # run docker-compose
         script += \
             'docker run ' \
@@ -210,17 +205,14 @@ class BudgetML:
         return script
 
     def create_shut_down(self, cloud_function_name):
-        # THIS WILL ONLY WORK IF GCLOUD CLI IS AUTHENTICATED TO THE RIGHT
-        # PROJECT
-        token = subprocess.check_output(
-            "gcloud auth print-identity-token", shell=True)
-        token = token.decode().strip('\n')
         trigger_url = f'https://{self.region}-' \
                       f'{self.project}.cloud' \
                       f'functions.net/{cloud_function_name}'
         shutdown_script = '#!/bin/bash' + '\n'
         shutdown_script += f'curl -X POST {trigger_url} ' \
-                           f'-H "Authorization: bearer {token}" ' \
+                           f'-H "Authorization: bearer $(docker run ' \
+                           f'google/cloud-sdk gcloud auth ' \
+                           f'print-identity-token)" ' \
                            '-H "Content-Type:application/json" --data "{}"'
         logging.debug(f'Shutdown script: {shutdown_script}')
         return shutdown_script
