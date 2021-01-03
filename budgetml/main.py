@@ -140,6 +140,7 @@ class BudgetML:
                   'http://metadata.google.internal/computeMetadata/v1' \
                   '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
                   '' \
+                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -209,10 +210,10 @@ class BudgetML:
                       f'{self.project}.cloud' \
                       f'functions.net/{cloud_function_name}'
         shutdown_script = '#!/bin/bash' + '\n'
+        shutdown_script += 'export TOKEN=$(docker run google/cloud-sdk ' \
+                           'gcloud auth print-identity-token)' + '\n'
         shutdown_script += f'curl -X POST {trigger_url} ' \
-                           f'-H "Authorization: bearer $(docker run ' \
-                           f'google/cloud-sdk gcloud auth ' \
-                           f'print-identity-token)" ' \
+                           f'-H "Authorization: bearer $TOKEN" ' \
                            '-H "Content-Type:application/json" --data "{}"'
         logging.debug(f'Shutdown script: {shutdown_script}')
         return shutdown_script
