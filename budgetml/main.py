@@ -157,6 +157,12 @@ class BudgetML:
                   '"Metadata-Flavor: ' \
                   'Google")' + '\n'
 
+        # delete temporary files
+        script += f'rm {template_dockerfile_location}' + '\n'
+        script += f'rm {requirements_location}' + '\n'
+        script += f'rm {template_dockercompose_location}' + '\n'
+        script += f'rm {nginx_conf_location}' + '\n'
+
         # write temporary files
         script += f'echo $DOCKER_TEMPLATE | base64 --decode >> ' \
                   f'{template_dockerfile_location}' + '\n'

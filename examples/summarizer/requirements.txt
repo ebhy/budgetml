@@ -1,0 +1,5 @@
+transformers==4.1.1
+torch==1.7.1
+sentencepiece==0.1.94
+google-api-python-client==1.12.8
+fastapi==0.63.0
