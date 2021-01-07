@@ -43,8 +43,13 @@ def create_upload_url(parent):
     return upload_url
 
 
-def create_cloud_function(project, region, function_name,
-                          instance_zone, instance_name):
+def create_cloud_function(
+        project,
+        region,
+        function_name,
+        instance_zone,
+        instance_name,
+        bucket_name):
     parent = 'projects/{}/locations/{}'.format(project, region)
 
     upload_url = create_upload_url(parent)
@@ -65,7 +70,10 @@ def create_cloud_function(project, region, function_name,
         # "ingressSettings": "ALLOW_INTERNAL_ONLY",
         # "sourceArchiveUrl": "",
         "sourceUploadUrl": upload_url,
-        "httpsTrigger": {}
+        "eventTrigger": {
+            "eventType": "google.storage.object.finalize",
+            "resource": f"projects/_/buckets/{bucket_name}",
+        }
     }
 
     logging.debug(f'Creating function with config: {config}')

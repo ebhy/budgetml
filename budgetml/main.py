@@ -224,10 +224,10 @@ class BudgetML:
         logging.debug(f'Shutdown script: {shutdown_script}')
         return shutdown_script
 
-    def create_cloud_function(self, instance_name):
+    def create_cloud_function(self, instance_name, bucket_name):
         function_name = 'function-' + instance_name
         create_gcp_function(self.project, self.region, function_name,
-                            self.zone, instance_name)
+                            self.zone, instance_name, bucket_name)
         return function_name
 
     def launch(self,
@@ -275,7 +275,8 @@ class BudgetML:
         # Create bucket if it doesnt exist
         create_bucket_if_not_exists(bucket_name)
 
-        cloud_function_name = self.create_cloud_function(instance_name)
+        cloud_function_name = \
+            self.create_cloud_function(instance_name, bucket_name)
 
         startup_script = self.create_start_up(
             predictor_class,

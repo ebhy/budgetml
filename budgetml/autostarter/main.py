@@ -17,7 +17,7 @@ def start_instance(project, zone, instance_name):
     return res
 
 
-def launch(request):
+def launch(event, context):
     project = os.environ['BUDGET_PROJECT']
     zone = os.environ['BUDGET_ZONE']
     instance = os.environ['BUDGET_INSTANCE']
