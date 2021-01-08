@@ -141,6 +141,7 @@ class BudgetML:
                   '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
                   '' \
                   '' \
+                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -211,16 +212,12 @@ class BudgetML:
         logging.debug(f'Startup script: {script}')
         return script
 
-    def create_shut_down(self, cloud_function_name):
-        trigger_url = f'https://{self.region}-' \
-                      f'{self.project}.cloud' \
-                      f'functions.net/{cloud_function_name}'
+    def create_shut_down(self, bucket_name):
         shutdown_script = '#!/bin/bash' + '\n'
-        shutdown_script += 'export TOKEN=$(docker run google/cloud-sdk ' \
-                           'gcloud auth print-identity-token)' + '\n'
-        shutdown_script += f'curl -X POST {trigger_url} ' \
-                           f'-H "Authorization: bearer $TOKEN" ' \
-                           '-H "Content-Type:application/json" --data "{}"'
+        shutdown_script += 'echo $(date) >> trigger.txt' + '\n'
+        shutdown_script += \
+            f'docker run -v "$PWD:$PWD" -w "$PWD" google/cloud-sdk gsutil ' \
+            f'cp trigger.txt gs://{bucket_name}/trigger.txt' + '\n'
         logging.debug(f'Shutdown script: {shutdown_script}')
         return shutdown_script
 
@@ -286,7 +283,7 @@ class BudgetML:
             username,
             password)
 
-        shutdown_script = self.create_shut_down(cloud_function_name)
+        shutdown_script = self.create_shut_down(bucket_name)
 
         # create docker template content
         docker_template_content = self.get_docker_file_contents(
