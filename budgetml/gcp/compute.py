@@ -30,7 +30,7 @@ def create_instance(compute, project, zone, static_ip, instance_name,
                     nginx_conf_content):
     # Get the latest Debian Jessie image.
     image_response = compute.images().getFromFamily(
-        project='cos-cloud', family='cos-85-lts').execute()
+        project='ubuntu-os-cloud', family='ubuntu-1804-lts').execute()
     source_disk_image = image_response['selfLink']
 
     # Configure the machine

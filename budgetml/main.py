@@ -140,8 +140,6 @@ class BudgetML:
                   'http://metadata.google.internal/computeMetadata/v1' \
                   '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
                   '' \
-                  '' \
-                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -190,8 +188,24 @@ class BudgetML:
         # gunicorn to be picked up later in app:main
         script += f'export BUDGET_TOKEN={str(uuid4())}' + '\n'
 
-        # download gcloud
-        script += f'docker pull google/cloud-sdk:321.0.0' + '\n'
+        # install docker if it doesnt exist
+        script += f'if [ -x "$(command -v docker)" ]; then' + '\n'
+        script += '    echo "Docker already installed"' + '\n'
+        script += f'else' + '\n'
+        script += '    sudo apt-get update' + '\n'
+        script += '    sudo apt-get -y install apt-transport-https ' \
+                  'ca-certificates curl gnupg-agent ' \
+                  'software-properties-common' + '\n'
+        script += '    curl -fsSL ' \
+                  'https://download.docker.com/linux/ubuntu/gpg | sudo ' \
+                  'apt-key add -' + '\n'
+        script += '    sudo add-apt-repository "deb [arch=amd64] ' \
+                  'https://download.docker.com/linux/ubuntu $(lsb_release ' \
+                  '-cs) stable"' + '\n'
+        script += '    sudo apt-get update' + '\n'
+        script += '    sudo apt-get -y install docker-ce docker-ce-cli ' \
+                  'containerd.io' + '\n'
+        script += 'fi' + '\n'
 
         # run docker-compose
         script += \
@@ -214,10 +228,11 @@ class BudgetML:
 
     def create_shut_down(self, bucket_name):
         shutdown_script = '#!/bin/bash' + '\n'
+        shutdown_script += 'sudo -s' + '\n'
+        shutdown_script += 'cd /tmp' + '\n'
         shutdown_script += 'echo $(date) >> trigger.txt' + '\n'
         shutdown_script += \
-            f'docker run -v "$PWD:$PWD" -w "$PWD" google/cloud-sdk gsutil ' \
-            f'cp trigger.txt gs://{bucket_name}/trigger.txt' + '\n'
+            f'gsutil cp trigger.txt gs://{bucket_name}/trigger.txt' + '\n'
         logging.debug(f'Shutdown script: {shutdown_script}')
         return shutdown_script
 
