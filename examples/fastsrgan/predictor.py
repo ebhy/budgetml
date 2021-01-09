@@ -44,7 +44,7 @@ class FastSRGANPredictor(BasePredictor):
     def load(self):
         # Fast model
         with tempfile.NamedTemporaryFile() as f:
-            download_blob('budget_models', 'fastsrgan/generator.h5', f.name)
+            download_blob('fastsrgan', 'generator.h5', f.name)
             fast_model = keras.models.load_model(f.name)
             inputs = keras.Input((None, None, 3))
             output = fast_model(inputs)
