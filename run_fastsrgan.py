@@ -5,7 +5,7 @@ DOMAIN = 'pichance.com'
 SUBDOMAIN = 'model'
 
 budgetml = BudgetML(
-    project='budgetml'
+    project='saas-generator'
 )
 
 # IP_ADDRESS = budgetml.create_static_ip('pichance-static-ip')
@@ -17,5 +17,5 @@ budgetml.launch(
     domain=DOMAIN,
     subdomain=SUBDOMAIN,
     requirements_path='examples/fastsrgan/requirements.txt',
-    static_ip='35.224.253.145'
+    static_ip='34.67.112.192'
 )

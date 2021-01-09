@@ -9,14 +9,12 @@ from fastapi import UploadFile, File
 from google.cloud import storage
 from starlette.responses import Response, FileResponse
 from tensorflow import keras
+
 from budgetml.basepredictor import BasePredictor
+
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
     """Downloads a blob from the bucket."""
-    # bucket_name = "your-bucket-name"
-    # source_blob_name = "storage-object-name"
-    # destination_file_name = "local/path/to/file"
-
     storage_client = storage.Client()
 
     bucket = storage_client.bucket(bucket_name)
@@ -46,8 +44,7 @@ class FastSRGANPredictor(BasePredictor):
     def load(self):
         # Fast model
         with tempfile.NamedTemporaryFile() as f:
-            # TODO: BILAL POINT THIS TO THE RIGHT BUCKET AND MODEL
-            # download_blob('budget_models', 'fastsrgan/generator.h5', f.name)
+            download_blob('budget_models', 'fastsrgan/generator.h5', f.name)
             fast_model = keras.models.load_model(f.name)
             inputs = keras.Input((None, None, 3))
             output = fast_model(inputs)
