@@ -1,11 +1,11 @@
 from budgetml import BudgetML
-from examples.fastsrgan.predictor import FastSRGANPredictor
+from examples.summarizer.predictor import Predictor
 
 budgetml = BudgetML(
-    project='budgetml'
+    project='ebhy-youtube'
 )
 
 budgetml.launch_local(
-    FastSRGANPredictor,
-    requirements_path='examples/fastsrgan/requirements.txt',
+    Predictor,
+    requirements_path='examples/summarizer/requirements.txt',
 )

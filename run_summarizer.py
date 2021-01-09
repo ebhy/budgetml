@@ -2,7 +2,7 @@ from budgetml import BudgetML
 from examples.summarizer.predictor import Predictor
 
 DOMAIN = 'you-tldr.com'
-SUBDOMAIN = 'model'
+SUBDOMAIN = 'models'
 
 budgetml = BudgetML(
     project='ebhy-youtube'
