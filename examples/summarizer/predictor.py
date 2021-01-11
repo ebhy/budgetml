@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from starlette.responses import Response
 from transformers import PegasusForConditionalGeneration, PegasusTokenizer
 
+
 if not firebase_admin._apps:
     firebase_admin.initialize_app()
 db = firestore.client()
