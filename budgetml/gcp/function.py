@@ -49,7 +49,8 @@ def create_cloud_function(
         function_name,
         instance_zone,
         instance_name,
-        bucket_name):
+        bucket_name,
+        timeout=200):
     parent = 'projects/{}/locations/{}'.format(project, region)
 
     upload_url = create_upload_url(parent)
@@ -58,17 +59,12 @@ def create_cloud_function(
         "entryPoint": "launch",
         "runtime": "python37",
         "availableMemoryMb": 128,
-        # "serviceAccountEmail": string,
-        # "updateTime": string,
-        # "versionId": string,
+        "timeout": f"{timeout}s",
         "environmentVariables": {
             "BUDGET_PROJECT": project,
             "BUDGET_ZONE": instance_zone,
             "BUDGET_INSTANCE": instance_name
         },
-        # "vpcConnectorEgressSettings": "ALL_TRAFFIC",
-        # "ingressSettings": "ALLOW_INTERNAL_ONLY",
-        # "sourceArchiveUrl": "",
         "sourceUploadUrl": upload_url,
         "eventTrigger": {
             "eventType": "google.storage.object.finalize",
