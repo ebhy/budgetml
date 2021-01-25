@@ -14,6 +14,7 @@ from budgetml.gcp.addresses import create_static_ip, release_static_ip
 from budgetml.gcp.compute import create_instance
 from budgetml.gcp.function import create_cloud_function as create_gcp_function
 from budgetml.gcp.storage import upload_blob, create_bucket_if_not_exists
+from budgetml.gcp.scheduler import create_scheduler_job as create_gcp_scheduler_job
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -252,6 +253,9 @@ class BudgetML:
         )
         return function_name
 
+    def create_scheduler_job(self, project_id, topic, schedule, region):
+        create_gcp_scheduler_job(project_id, topic, schedule, region)
+
     def launch(self,
                predictor_class,
                domain: Text,
@@ -297,10 +301,19 @@ class BudgetML:
         # Create bucket if it doesnt exist
         create_bucket_if_not_exists(bucket_name)
 
-        # create topic name
+        # Create topic name
         topic = 'topic-' + instance_name
 
+        # Create cloud function
         self.create_cloud_function(instance_name, topic)
+
+        # Create scheduler function
+        self.create_scheduler_job(
+            project_id=self.project,
+            topic=topic,
+            schedule='* * * * *',
+            region=self.region,
+        )
 
         startup_script = self.create_start_up(
             predictor_class,
