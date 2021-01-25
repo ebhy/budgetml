@@ -114,6 +114,8 @@ def create_instance(compute, project, zone, static_ip, instance_name,
         }
     }
 
+    logging.debug(f"Creating instance: {config}")
+
     return compute.instances().insert(
         project=project,
         zone=zone,

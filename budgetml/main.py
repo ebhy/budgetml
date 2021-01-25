@@ -234,7 +234,7 @@ class BudgetML:
         shutdown_script = '#!/bin/bash' + '\n'
         shutdown_script += 'sudo -s' + '\n'
         shutdown_script += 'cd /tmp' + '\n'
-        shutdown_script += 'echo "+++ Running shutdown script +++"'
+        shutdown_script += 'echo "+++ Running shutdown script +++"' + '\n'
         shutdown_script += f'docker run -it google/cloud-sdk:324.0.0 gcloud ' \
                            f'pubsub topics publish {topic} ' \
                            '--message "{}"'
