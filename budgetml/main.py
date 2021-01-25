@@ -140,6 +140,7 @@ class BudgetML:
                   'http://metadata.google.internal/computeMetadata/v1' \
                   '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
                   '' \
+                  '' \
                   'Google")' + '\n'
         script += 'export REQUIREMENTS=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
@@ -221,25 +222,34 @@ class BudgetML:
             f'-e BASE_IMAGE=$BASE_IMAGE ' \
             f'-e BUDGET_TOKEN=$BUDGET_TOKEN ' \
             '--rm -v /var/run/docker.sock:/var/run/docker.sock -v ' \
-            '"$PWD:$PWD" -w="$PWD" docker/compose:1.24.0 up -d'
+            '"$PWD:$PWD" -w="$PWD" docker/compose:1.24.0 up -d' + '\n'
+
+        script += 'docker pull google/cloud-sdk:324.0.0' + '\n'
 
         logging.debug(f'Startup script: {script}')
         return script
 
-    def create_shut_down(self, bucket_name):
+    def create_shut_down(self, topic):
         shutdown_script = '#!/bin/bash' + '\n'
         shutdown_script += 'sudo -s' + '\n'
         shutdown_script += 'cd /tmp' + '\n'
-        shutdown_script += 'echo $(date) >> trigger.txt' + '\n'
-        shutdown_script += \
-            f'gsutil cp trigger.txt gs://{bucket_name}/trigger.txt' + '\n'
+        shutdown_script += 'echo "+++ Running shutdown script +++"'
+        shutdown_script += f'docker run -it google/cloud-sdk:324.0.0 gcloud ' \
+                           f'pubsub topics publish {topic} ' \
+                           '--message "{}"'
         logging.debug(f'Shutdown script: {shutdown_script}')
         return shutdown_script
 
-    def create_cloud_function(self, instance_name, bucket_name):
+    def create_cloud_function(self, instance_name, topic):
         function_name = 'function-' + instance_name
-        create_gcp_function(self.project, self.region, function_name,
-                            self.zone, instance_name, bucket_name)
+        create_gcp_function(
+            self.project,
+            self.region,
+            function_name,
+            self.zone,
+            instance_name,
+            topic
+        )
         return function_name
 
     def launch(self,
@@ -287,8 +297,10 @@ class BudgetML:
         # Create bucket if it doesnt exist
         create_bucket_if_not_exists(bucket_name)
 
-        cloud_function_name = \
-            self.create_cloud_function(instance_name, bucket_name)
+        # create topic name
+        topic = 'topic-' + instance_name
+
+        self.create_cloud_function(instance_name, topic)
 
         startup_script = self.create_start_up(
             predictor_class,
@@ -298,7 +310,7 @@ class BudgetML:
             username,
             password)
 
-        shutdown_script = self.create_shut_down(bucket_name)
+        shutdown_script = self.create_shut_down(topic)
 
         # create docker template content
         docker_template_content = self.get_docker_file_contents(

@@ -7,6 +7,7 @@ import googleapiclient.discovery
 import requests
 
 from budgetml import autostarter
+from budgetml.gcp.pubsub import create_topic
 
 
 def get_api():
@@ -49,8 +50,11 @@ def create_cloud_function(
         function_name,
         instance_zone,
         instance_name,
-        bucket_name,
+        topic,
         timeout=200):
+    # create pubsub topic
+    full_topic = create_topic(project, topic)
+
     parent = 'projects/{}/locations/{}'.format(project, region)
 
     upload_url = create_upload_url(parent)
@@ -67,8 +71,8 @@ def create_cloud_function(
         },
         "sourceUploadUrl": upload_url,
         "eventTrigger": {
-            "eventType": "google.storage.object.finalize",
-            "resource": f"projects/_/buckets/{bucket_name}",
+            "eventType": "providers/cloud.pubsub/eventTypes/topic.publish",
+            "resource": f"{full_topic}"
         }
     }
 
