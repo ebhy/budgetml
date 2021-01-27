@@ -77,6 +77,7 @@ budgetml = budgetml.BudgetML(project='YOUR_PROJECT')
 IP_ADDRESS = budgetml.create_static_ip('STATIC-IP-NAME')
 print(IP_ADDRESS)
 ```
+IP address has to be in the same region as everything else.
 
 ## Create A record
 Add an A record that points your subdomain.domain to IP_ADDRESS.
