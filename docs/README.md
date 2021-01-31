@@ -50,15 +50,58 @@ server is very basic, it is still important to understand its components. Here t
 * It uses the [startup_event](https://fastapi.tiangolo.com/advanced/events/) hook to do predictor.load() at the very start of the server initialization.
 * It uses the [Password and Bearer pattern](https://fastapi.tiangolo.com/tutorial/security/simple-oauth2/) for OAuth2 authorization.
 * Apart from the OAuth endpoints, it has three different endpoints to be used for various ML use-cases. These endpoints are closely tried to the `Predictor` class that is passed, and 
-the `Predictor` class should have baked-in knowledge of what endpoint is to be hit after deployment. Here is more information about these endpoints:
+the `Predictor.predict()` function should have baked-in knowledge of what endpoint is to be hit after deployment. Here is more information about these endpoints:
 
 ### Generic (`/predict`)
 The Generic endpoint (`/predict`) is meant for the most general-purpose use-case. 
+
+In this case, the `predict()` function literally 
+gets passed the [FastAPI/Starlette Request](https://www.starlette.io/requests/) directly. In this case, the `Predictor` is responsible for 
+parsing the Request itself: Bit of a hassle but maximum flexibility.
+
 ### Dict (`/predict_dict`)
 The Dict endpoint (`/predict_dict`) is meant for use-case where the input to the model can be represented as a JSON-style dict object.
 
+In this case, the `predict()` function gets passed a special [Pydantic](https://pydantic-docs.helpmanual.io/) model object called Payload. The Payload definition is as follows:
+
+```python
+from pydantic import BaseModel
+class Payload(BaseModel):
+    payload: Dict = {}
+```
+
+Therefore, in the `predict()` function it can be accessed as follows:
+
+```python
+async def predict(self, request):
+    print(request.payload)
+    print(request.payload["keys"])
+```
+
+A full example can be seen [here](../examples/deploy_simple_model/predictor.py).
+
 ### Image (`/predict_image`)
-The Image endpoint (`/predict_image`) is meant for the use-case where the input to the model can be represented as an image.
+The Image endpoint (`/predict_image`) is meant for the use-case where the input to the model can be represented as an image. This endpoint is 
+especially helpful as it allows the user to upload an image straight from an image picker from the interactive docs.
+
+In this case, the `predict()` function gets passed a [UploadFile](https://fastapi.tiangolo.com/tutorial/request-files/) FastAPI object. Therefore, 
+the function needs to be able to deal with this sort of output. Here is a short example:
+
+```python
+from fastapi import UploadFile, File
+from starlette.responses import Response
+
+class Predictor():
+  ...
+  
+  async def predict(self, request: UploadFile = File(...)) -> Response:
+      contents = await request.read()
+      nparr = np.fromstring(contents, np.uint8)  # using numpy
+      img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)  # using cv2 to decode
+```
+
+Regardless of which endpoint you choose, they all need to return a [Starlette Response](https://www.starlette.io/responses/) object. FastAPI makes this easy: Returning a primitive like an 
+integer, string, dict etc will work automatically. But in special cases, like e.g. in returning an image, one can utilize special Response objects like the [File Response](https://www.starlette.io/responses/) object.
 
 ## Server Environment
 The `launch` method takes an optional list of python requirements. After launch, the startup script executes a series of steps including:
