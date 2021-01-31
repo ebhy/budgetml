@@ -39,7 +39,7 @@ We built BudgetML because it's hard to find a simple way to get a model in produ
 
 * Cloud functions are limited in memory and cost a lot at scale. 
 
-* Kubernetes cluster are an overkill for one single model. 
+* Kubernetes clusters are an overkill for one single model. 
 
 * Deploying from scratch involves learning too many different concepts like SSL certificate generation, Docker, REST, Uvicorn/Gunicorn, backend servers etc., that are simply not within the scope of a typical data scientist.
 
@@ -60,7 +60,7 @@ memory intense tasks like ML model inference functions. See the following price 
 
 ![GCP costs](docs/static/gcp_costs.png)
 
-Even with the lowest machine_type, there is a $46/month savings, and with the highest configuration this is $370/month savings!
+Even with the lowest machine_type, there is a **$46/month** savings, and with the highest configuration this is **$370/month** savings!
 
 ## Installation
 BudgetML is available for easy installation into your environment via PyPI:
