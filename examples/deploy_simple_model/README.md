@@ -8,20 +8,54 @@ server, complete with interactive [Swagger](https://swagger.io/docs/) docs.
 
 This particular example uses the awesome [HuggingFace](https://huggingface.co/) library to deploy a simple sentiment analysis 
 model based on BERT. It uses the [HuggingFace pipeline](https://huggingface.co/transformers/main_classes/pipelines.html) convenience 
-function to achieve this.
+function to achieve this. Here is the simple `Predictor` class required for this (see `predictor.py`).
+
+```python
+class Predictor:
+    def load(self):
+        from transformers import pipeline
+        self.model = pipeline(task="sentiment-analysis")
+
+    async def predict(self, request):
+        # We know we are going to use the `predict_dict` method, so we use
+        # the request.payload pattern
+        req = request.payload
+        return self.model(req["text"])[0]
+```
+Just overriding two functions and the API is ready. No frills.
 
 Here is how you can try it for yourself.
 
-## Set up
-Create a Google Cloud Project, and follow the pre-requisite steps:
+## Pre-requisites
+[Create a Google Cloud Project](https://cloud.google.com/appengine/docs/standard/nodejs/building-app/creating-project), 
+and additionally follow the pre-requisite steps:
 
-* Enable billing.
-* Enable the following APIs:
-  * test
-  * test
-* Create a service account with the following permissions (to be pointed at later with GOOGLE_APPLICATION_CREDENTIALS):
-  * test
-  * test
+* [Enable billing](https://cloud.google.com/billing/docs/how-to/modify-project).
+* [Enable APIs](https://cloud.google.com/apis/docs/getting-started):
+  * Cloud Storage
+  * Compute Engine API
+  * Google Cloud Pub/Sub API
+  * Google Cloud Functions
+  * Cloud Build API
+  * Cloud Scheduler API
+  * Cloud Functions API
+* Create a service account with the following roles: `roles/editor`. For ease:
+
+[Install the `gcloud`](https://cloud.google.com/sdk/docs/install) CLI and use it as follows:
+
+```bash
+# creating the actual Service Account
+gcloud iam service-accounts create ${SA_NAME}
+
+# creating a json-key for the new Service Account
+gcloud iam service-accounts keys create ${SA_PATH} \
+    --iam-account ${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com
+    
+# give permissions to the new Service Account
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member=serviceAccount:${SA_NAME}@${PROJECT_ID}.gserviceaccount.com \
+    --role "roles/editor" 
+```
 
 ## Export env variables
 ```bash
