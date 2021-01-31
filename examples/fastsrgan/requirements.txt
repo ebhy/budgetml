@@ -1,7 +1,0 @@
-tensorflow==2.1.0
-opencv-python==4.1.1.26
-numpy==1.17.2
-tensorflow_addons==0.7.0
-h5py==2.8.0
-google-api-python-client==1.12.8
-fastapi==0.63.0
