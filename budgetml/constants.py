@@ -1,6 +1,6 @@
 import os
 
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 APP_NAME = 'budgetml'
 BUDGET_NGINX_PATH = os.getenv('BUDGET_NGINX_PATH', './nginx.conf')

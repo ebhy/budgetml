@@ -18,8 +18,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 # file in the src directory, but we'll bypass actually loading up the library.)
 vspec = importlib.util.spec_from_file_location(
     "version",
-    str(Path(__file__).resolve().parent /
-        'budgetml' / 'constants.py')
+    str(Path(__file__).resolve().parent / 'budgetml' / 'constants.py')
 )
 vmod = importlib.util.module_from_spec(vspec)
 vspec.loader.exec_module(vmod)
@@ -38,6 +37,8 @@ setup(
         "google-api-python-client==1.12.8",
         "google-cloud-storage==1.35.0",
         "docker==4.4.1",
+        "google-cloud-scheduler==2.1.0",
+        "google-cloud-pubsub==2.2.0",
     ],
     python_requires=">=3.6, <3.9.0",
     license='Apache License 2.0',  # noqa
@@ -45,7 +46,8 @@ setup(
     author_email='htahir111@gmail.com',
     url='https://github.com/ebhy/budgetml',
     keywords=[
-        "deploy", "machine learning", "deep learning", "inference", "api"
+        "deploy", "machine learning", "deep learning", "inference", "api",
+        "prediction", "deep learning", "data science"
     ],
     # See https://PyPI.python.org/PyPI?%3Aaction=list_classifiers
     classifiers=[

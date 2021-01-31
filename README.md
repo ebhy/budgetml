@@ -1,5 +1,5 @@
 # BudgetML
-Deploy your model in production for less than $20/month with less than 20 lines of code.
+Deploy your model in production for a few bucks with less than 20 lines of code.
 BudgetML lets you deploy your model on a preemptible instance (which is ~70% cheaper than a regular instance) with a https API endpoint.
 We autostart the instance when it shuts down so your instance only goes down for 1-2 minutes before its up again.
 

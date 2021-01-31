@@ -3,6 +3,7 @@ import inspect
 import logging
 import os
 import pathlib
+from typing import List, Union
 from typing import Text, Any
 from uuid import uuid4
 
@@ -13,29 +14,34 @@ from budgetml.constants import BUDGETML_BASE_IMAGE_NAME
 from budgetml.gcp.addresses import create_static_ip, release_static_ip
 from budgetml.gcp.compute import create_instance
 from budgetml.gcp.function import create_cloud_function as create_gcp_function
+from budgetml.gcp.scheduler import \
+    create_scheduler_job as create_gcp_scheduler_job
 from budgetml.gcp.storage import upload_blob, create_bucket_if_not_exists
-from budgetml.gcp.scheduler import create_scheduler_job as create_gcp_scheduler_job
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class BudgetML:
     def __init__(self,
-                 project: Text,
+                 project: Text = None,
                  zone: Text = 'us-central1-a',
                  unique_id: Text = str(uuid4()),
                  region: Text = 'us-central1',
                  static_ip: Text = None):
+        """
+        BudgetML client instance.
 
+        :param project: (gcp) project_id.
+        :param zone: (gcp) zone.
+        :param unique_id: unique id to identify client.
+        :param region: (gcp) region.
+        :param static_ip: static ip address.
+        """
         self.project = project
         self.zone = zone
         self.unique_id = unique_id
         self.region = region
-
-        if static_ip is None:
-            self.static_ip = None
-        else:
-            self.static_ip = static_ip
+        self.static_ip = static_ip
 
         # Initialize compute REST API client
         self.compute = googleapiclient.discovery.build('compute', 'v1')
@@ -140,6 +146,9 @@ class BudgetML:
         script += 'export DOCKER_TEMPLATE=$(curl ' \
                   'http://metadata.google.internal/computeMetadata/v1' \
                   '/instance/attributes/DOCKER_TEMPLATE -H "Metadata-Flavor: ' \
+                  '' \
+                  '' \
+                  '' \
                   '' \
                   '' \
                   'Google")' + '\n'
@@ -262,7 +271,7 @@ class BudgetML:
                subdomain: Text = 'budget',
                username: Text = 'budget',
                password: Text = str(uuid4()),
-               requirements_path: Text = None,
+               requirements: Union[Text, List] = None,
                dockerfile_path: Text = None,
                bucket_name: Text = None,
                instance_name: Text = None,
@@ -270,20 +279,21 @@ class BudgetML:
                preemptible: bool = True,
                static_ip: Text = None):
         """
-        Launches the VM.
+        Launches the VM, setups up https endpoint.
 
-        :param predictor_class: Class of type budgetml.BasePredictor.
-        :param domain:
-        :param subdomain:
-        :param username:
-        :param password:
-        :param dockerfile_path:
-        :param requirements_path:
-        :param bucket_name:
-        :param instance_name:
-        :param machine_type:
-        :param preemptible:
-        :return:
+        :param predictor_class: class of type budgetml.BasePredictor
+        :param domain: domain e.g. lol.com
+        :param subdomain: subdomain e.g. model
+        :param username: username for FastAPI endpoints
+        :param password: password for FastAPI endpoints
+        :param dockerfile_path: path to dockerfile
+        :param requirements: Path to requirements or a list of python
+        requirements. Use one of `dockerfile_path` or `requirements`
+        :param bucket_name: name of bucket to store predictor class.
+        :param instance_name: name of server instance.
+        :param machine_type: machine type of server instance
+        :param preemptible: whether machine is preemtible or not
+        :return: tuple of username and password
         """
         if bucket_name is None:
             bucket_name = f'budget_bucket_{self.unique_id}'
@@ -298,13 +308,13 @@ class BudgetML:
         else:
             self.static_ip = static_ip
 
-        # Create bucket if it doesnt exist
+        # create bucket if it doesnt exist
         create_bucket_if_not_exists(bucket_name)
 
-        # Create topic name
+        # create topic name
         topic = 'topic-' + instance_name
 
-        # Create cloud function
+        # create cloud function
         self.create_cloud_function(instance_name, topic)
 
         # Create scheduler function
@@ -315,6 +325,7 @@ class BudgetML:
             region=self.region,
         )
 
+        # create startup
         startup_script = self.create_start_up(
             predictor_class,
             bucket_name,
@@ -323,6 +334,7 @@ class BudgetML:
             username,
             password)
 
+        # create shutdown
         shutdown_script = self.create_shut_down(topic)
 
         # create docker template content
@@ -330,8 +342,11 @@ class BudgetML:
             dockerfile_path)
 
         # create requirements content
-        requirements_content = self.get_requirements_file_contents(
-            requirements_path)
+        if isinstance(requirements, List):
+            requirements_content = '\n'.join(requirements)
+        else:
+            requirements_content = self.get_requirements_file_contents(
+                requirements)
 
         docker_compose_content = self.get_docker_compose_contents()
         nginx_conf_content = self.get_nginx_conf_contents(domain, subdomain)
@@ -370,13 +385,25 @@ class BudgetML:
 
     def launch_local(self,
                      predictor_class,
-                     requirements_path: Text = None,
+                     requirements: Union[Text, List] = None,
                      dockerfile_path: Text = None,
                      bucket_name: Text = None,
                      username: Text = 'budget',
                      password: Text = str(uuid4())):
+        """
+        Launch API locally at 0.0.0.0:8000 via docker to simulate endpoint
+        before a proper launch.
 
-        # Create bucket if it doesnt exist
+        :param predictor_class: class of type budgetml.BasePredictor
+        :param username: username for FastAPI endpoints
+        :param password: password for FastAPI endpoints
+        :param dockerfile_path: path to dockerfile
+        :param requirements: Path to requirements or a list of python
+        requirements. Use one of `dockerfile_path` or `requirements`
+        :param bucket_name: name of bucket to store predictor class.
+        :return:
+        """
+        # create bucket if it doesnt exist
         if bucket_name is None:
             bucket_name = f'budget_bucket_{self.unique_id}'
         create_bucket_if_not_exists(bucket_name)
@@ -386,8 +413,11 @@ class BudgetML:
             dockerfile_path)
 
         # create requirements content
-        requirements_content = self.get_requirements_file_contents(
-            requirements_path)
+        if isinstance(requirements, List):
+            requirements_content = '\n'.join(requirements)
+        else:
+            requirements_content = self.get_requirements_file_contents(
+                requirements)
 
         tmp_dir = 'tmp'
         try:
