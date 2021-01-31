@@ -115,7 +115,7 @@ We are proud that BudgetML is actively being used in the following live products
 * [PicHance](https://pichance.com)
 * [you-tldr](https://you-tldr.com)
 
-## ZenML: For more production-scenarios
+## ZenML: For production scenarios
 BudgetML is for users on a budget. If you're working in a more serious production environment, then consider using 
 [ZenML](https://github.com/maiot-io/zenml) as the perfect open-source MLOPs framework for ML production needs. It does 
 more than just deployments, and is more suited for professional workplaces.
