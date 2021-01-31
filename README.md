@@ -23,17 +23,45 @@
 </div>
 
 ---
-
-
 # BudgetML
 Deploy your model in production on a budget in less than 10 lines of code.
 
-BudgetML lets you deploy your model on a spot/preemtible instance (which is ~80% cheaper than a regular instance) with a secured, HTTPS API endpoint.
+BudgetML lets you deploy your model on a spot/preemptible instance (which is ~80% cheaper than a regular instance) with a secured HTTPS API endpoint.
 The tool sets it up in a way that the instance autostarts when it shuts down (at least once every 24 hours) with only a few minutes of downtime.
 
-BudgetML gives ensures the cheapest possible API endpoint with the lowest possible downtime. Therefore, it is aimed at 
+BudgetML ensures the cheapest possible API endpoint with the lowest possible downtime. This makes it perfect for practitioners who 
+would like to quickly deploy their models to an endpoint, but not waste a lot of money trying to figure it out.
+
+## Why?
+We built BudgetML because it's hard to find a simple way to get a model in production **fast** and **cheaply**. 
+
+Cloud functions are limited in memory and cost a lot at scale. 
+
+Kubernetes cluster are an overkill for one single model. 
+
+Deploying from scratch involves learning 
+too many different concepts like SSL certificate generation, Docker, REST, Uvicorn/Gunicorn, backend servers etc., that are simply not within the scope 
+of a typical data scientist.
+
+BudgetML is our answer to this challenge. It is supposed to be fast, easy, and developer-friendly. It is by no means meant to be used in a full-fledged 
+production-ready setup. It is simply a means to get a server up and running **as fast as possible** with the **lowest costs possible**.
+
 ## Key Features
-* 
+* Automatic [FastAPI](https://fastapi.tiangolo.com/) server endpoint generation (its faster than Flask).
+* Fully interactive docs via [Swagger](https://swagger.io/docs/).
+* Built-in SSL certificate generation via [LetsEncrypt](https://letsencrypt.org/) and [docker-swag](https://github.com/linuxserver/docker-swag).
+* Uses cheap preemtible instances but has 99% uptime!
+* Complete OAuth2 secured endpoints with [Password and Bearer pattern](https://fastapi.tiangolo.com/tutorial/security/simple-oauth2/).
+
+## Cost comparison
+BudgetML uses Google Cloud Preemptible instances under-the-hood to reduce costs by 80%. This can potentially mean hundreds of dollars 
+worth of savings. Here is a screenshot of the `e2-highmem` GCP series, which is regular family of instances to be using for 
+memory intense tasks like ML model inference functions. See the following price comparison (as of Jan 31, 2021 [[source](https://cloud.google.com/compute/vm-instance-pricing)])
+
+![GCP costs](docs/static/gcp_costs.png)
+
+Even with the lowest machine_type, there is a $46/month savings, and with the highest configuration this is $370/month savings!
+
 ## Quickstart
 BudgetML aims for as simple a process as possible. First set up a predictor:
 
@@ -74,8 +102,10 @@ For a deeper dive, [check out the detailed guide](examples/deploy_simple_model) 
 more information about the BudgetML API, refer to the [docs](docs).
 
 ## Projects using BudgetML
-[PicHance](https://pichance.com)
-[you-tldr](https://you-tldr.com)
+We are proud that BudgetML is actively being used in the following live products:
+
+* [PicHance](https://pichance.com)
+* [you-tldr](https://you-tldr.com)
 
 ## ZenML: For more production-scenarios
 BudgetML is for users on a budget. If you're working in a more serious production environment, then consider using 
@@ -83,4 +113,6 @@ BudgetML is for users on a budget. If you're working in a more serious productio
 more than just deployments, and is more suited for professional workplaces.
 
 ## Proudly built by two brothers
-We are two brothers who love building products.
+We are two brothers who love building products, especially ML-related products that make life easier for people.
+If you use this tool for any of your products, we would love to hear about it and potentially add it to this space.
+Please get in touch [via email](mailto:htahir111@gmail.com).
