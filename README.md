@@ -101,6 +101,16 @@ budgetml.launch(
 For a deeper dive, [check out the detailed guide](examples/deploy_simple_model) in the [examples](examples) directory. For 
 more information about the BudgetML API, refer to the [docs](docs).
 
+## Screenshots
+Interactive docs to test endpoints. Support for Images.
+![Interactive docs](docs/static/swagger_ui.png)
+
+Password-protected endpoints:
+![Password protected endpoints](docs/static/swagger_password_auth.png)
+
+Simple prediction interface:
+![Simple Prediction Interface of BudgetML](docs/static/swagger_predict_dict.png)
+
 ## Projects using BudgetML
 We are proud that BudgetML is actively being used in the following live products:
 
