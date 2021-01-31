@@ -26,22 +26,20 @@
 # BudgetML
 Deploy your model in production on a budget in less than 10 lines of code.
 
-BudgetML lets you deploy your model on a spot/preemptible instance (which is ~80% cheaper than a regular instance) with a secured HTTPS API endpoint.
-The tool sets it up in a way that the instance autostarts when it shuts down (at least once every 24 hours) with only a few minutes of downtime.
+BudgetML lets you deploy your model on a spot/preemptible instance (which is **~80% cheaper** than a regular instance) with a **secured HTTPS API** endpoint.
+The tool sets it up in a way that the instance autostarts when it shuts down (at least once every 24 hours) with **only a few minutes of downtime**.
+BudgetML ensures the cheapest possible API endpoint with the lowest possible downtime. 
 
-BudgetML ensures the cheapest possible API endpoint with the lowest possible downtime. This makes it perfect for practitioners who 
-would like to quickly deploy their models to an endpoint, but not waste a lot of money trying to figure it out.
+BudgetML is perfect for practitioners who would like to quickly deploy their models to an endpoint, but not waste a lot of money trying to figure it out.
 
 ## Why?
 We built BudgetML because it's hard to find a simple way to get a model in production **fast** and **cheaply**. 
 
-Cloud functions are limited in memory and cost a lot at scale. 
+* Cloud functions are limited in memory and cost a lot at scale. 
 
-Kubernetes cluster are an overkill for one single model. 
+* Kubernetes cluster are an overkill for one single model. 
 
-Deploying from scratch involves learning 
-too many different concepts like SSL certificate generation, Docker, REST, Uvicorn/Gunicorn, backend servers etc., that are simply not within the scope 
-of a typical data scientist.
+* Deploying from scratch involves learning too many different concepts like SSL certificate generation, Docker, REST, Uvicorn/Gunicorn, backend servers etc., that are simply not within the scope of a typical data scientist.
 
 BudgetML is our answer to this challenge. It is supposed to be fast, easy, and developer-friendly. It is by no means meant to be used in a full-fledged 
 production-ready setup. It is simply a means to get a server up and running **as fast as possible** with the **lowest costs possible**.
