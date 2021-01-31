@@ -1,3 +1,30 @@
+<div align="center">
+
+<img src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1500&q=80">
+
+---
+
+<p align="center">
+  <a href="#quickstart">Quickstart</a> •
+  <a href="https://github.com/ebhy/budgetml/discussions">Community</a>
+</p>
+
+[![PyPI - ZenML Version](https://img.shields.io/pypi/v/budgetml.svg?label=pip&logo=PyPI&logoColor=white)](https://pypi.org/project/budgetml/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/budgetml)](https://pypi.org/project/budgetml/)
+[![PyPI Status](https://pepy.tech/badge/budgetml)](https://pepy.tech/project/budgetml)
+![GitHub](https://img.shields.io/github/license/ebhy/budgetml)
+</div>
+
+---
+
+<div> Give us a 
+    <img width="25" src="https://cdn.iconscout.com/icon/free/png-256/github-153-675523.png" alt="Slack"/>
+<b>GitHub star</b> to show your love!
+</div>
+
+---
+
+
 # BudgetML
 Deploy your model in production on a budget in less than 10 lines of code.
 
