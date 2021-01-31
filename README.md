@@ -6,6 +6,7 @@
 
 <p align="center">
   <a href="#quickstart">Quickstart</a> •
+  <a href="#installation">Installation</a> •
   <a href="https://github.com/ebhy/budgetml/discussions">Community</a>  •
   <a href="https://github.com/ebhy/budgetml/docs">Docs</a> 
 </p>
@@ -60,6 +61,18 @@ memory intense tasks like ML model inference functions. See the following price 
 ![GCP costs](docs/static/gcp_costs.png)
 
 Even with the lowest machine_type, there is a $46/month savings, and with the highest configuration this is $370/month savings!
+
+## Installation
+BudgetML is available for easy installation into your environment via PyPI:
+```bash
+pip install budgetml
+```
+Alternatively, if you’re feeling brave, feel free to install the bleeding edge:
+
+**NOTE:** Do so on your own risk, no guarantees given!
+```bash
+pip install git+https://github.com/ebhy/budgetml.git@main --upgrade
+```
 
 ## Quickstart
 BudgetML aims for as simple a process as possible. First set up a predictor:
