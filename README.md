@@ -25,7 +25,7 @@
 </div>
 
 ---
-# BudgetML - Deploy your ML model in 10 lines of code while saving 80%
+# BudgetML
 BudgetML lets you deploy your model on a [Google Cloud Platform preemptible instance](https://cloud.google.com/compute/docs/instances/preemptible) 
 (which is **~80% cheaper** than a regular instance) with a **secured HTTPS API** endpoint.
 The tool sets it up in a way that the instance autostarts when it shuts down (at least once every 24 hours) with **only a few minutes of downtime**.
