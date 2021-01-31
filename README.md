@@ -1,105 +1,59 @@
 # BudgetML
-Deploy your model in production for a few bucks with less than 20 lines of code.
-BudgetML lets you deploy your model on a preemptible instance (which is ~70% cheaper than a regular instance) with a https API endpoint.
-We autostart the instance when it shuts down so your instance only goes down for 1-2 minutes before its up again.
+Deploy your model in production on a budget in less than 10 lines of code.
 
-# Setup
+BudgetML lets you deploy your model on a spot/preemtible instance (which is ~80% cheaper than a regular instance) with a secured, HTTPS API endpoint.
+The tool sets it up in a way that the instance autostarts when it shuts down (at least once every 24 hours) with only a few minutes of downtime.
 
-## Install
-```bash
-pip install budgetml
-```
-
-## Create GCP Project
-Create a GCP project
-
-## Create Service Account
-We use Google Cloud under the hood. Make sure you have created a GCP project before proceeding.
-Also have your Google Credentials service account file available.
-
-The most convenient way is through the gcloud command line. 
-For convenience:
-Run the following commands to avoid retyping:
-export PROJECT_ID=<enter your Google Cloud Project name>
-export SA_NAME="sa-name"
-export SA_PATH="$(pwd)/sa.json"
-
-##### Creating the actual Service Account
-```bash
-gcloud iam service-accounts create ${SA_NAME}
-```
-
-#### Creating a json-key for the new Service Account
-```bash
-gcloud iam service-accounts keys create ${SA_PATH} \
-    --iam-account ${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com
-```
-
-#### Give permissions to the new Service Account
-```bash
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-    --member=serviceAccount:${SA_NAME}@${PROJECT_ID}.gserviceaccount.com \
-    --role "roles/editor" 
-```
-
-## Enable APIs
-
-You need to enable APIs. We need
-
-* Compute Engine
-* Google Cloud Functions [For this we need Cloud Build]
-
-## Create Predictor
-Create a a BasePredictor class
+BudgetML gives ensures the cheapest possible API endpoint with the lowest possible downtime. Therefore, it is aimed at 
+## Key Features
+* 
+## Quickstart
+BudgetML aims for as simple a process as possible. First set up a predictor:
 
 ```python
-class BasePredictor:
+# predictor.py
+class Predictor:
     def load(self):
-        """Called once during each worker initialization. Performs
-        setup such as downloading/initializing the model or downloading a
-        vocabulary.
-        """
-        pass
+        from transformers import pipeline
+        self.model = pipeline(task="sentiment-analysis")
 
-    async def predict(self, request) -> Response:
-        """Responsible for running the inference.
-
-        Args:
-            request (required): The request from the server client
-        """
-        pass
+    async def predict(self, request):
+        # We know we are going to use the `predict_dict` method, so we use
+        # the request.payload pattern
+        req = request.payload
+        return self.model(req["text"])[0]
 ```
 
-## Create Static IP Address
+Then launch it with a simple script:
 ```python
+# deploy.py
 import budgetml
-budgetml = budgetml.BudgetML(project='YOUR_PROJECT')
-IP_ADDRESS = budgetml.create_static_ip('STATIC-IP-NAME')
-print(IP_ADDRESS)
-```
-IP address has to be in the same region as everything else.
+from predictor import Predictor
 
-## Create A record
-Add an A record that points your subdomain.domain to IP_ADDRESS.
+# add your GCP project name here.
+budgetml = budgetml.BudgetML(project='GCP_PROJECT')
 
-## Launch Instance
-Time to launch! Just a few lines of code between your model and live API :)
-
-```python
-import budgetml
-import Predictor
-
-# create BudgetML instance. Add your GCP project name here.
-budgetml = budgetml.BudgetML(project='YOUR_PROJECT')
-
-# launch instance
+# launch endpoint
 budgetml.launch(
     Predictor,
     domain="example.com",
     subdomain="api",
-    requirements_path='path/to/fastsrgan_requirements.txt',
-    static_ip=IP_ADDRESS
+    static_ip="32.32.32.322",
+    machine_type="e2-medium",
+    requirements=['tensorflow==2.3.0', 'transformers'],
 )
 ```
+For a deeper dive, [check out the detailed guide](examples/deploy_simple_model) in the [examples](examples) directory. For 
+more information about the BudgetML API, refer to the [docs](docs).
 
-And that's it!
+## Projects using BudgetML
+[PicHance](https://pichance.com)
+[you-tldr](https://you-tldr.com)
+
+## ZenML: For more production-scenarios
+BudgetML is for users on a budget. If you're working in a more serious production environment, then consider using 
+[ZenML](https://github.com/maiot-io/zenml) as the perfect open-source MLOPs framework for ML production needs. It does 
+more than just deployments, and is more suited for professional workplaces.
+
+## Proudly built by two brothers
+We are two brothers who love building products.

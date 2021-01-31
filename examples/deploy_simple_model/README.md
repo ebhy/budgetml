@@ -44,16 +44,20 @@ and additionally follow the pre-requisite steps:
 [Install the `gcloud`](https://cloud.google.com/sdk/docs/install) CLI and use it as follows:
 
 ```bash
+export GCP_PROJECT=<enter your Google Cloud Project name>
+export SA_NAME="sa-name"
+export SA_PATH="$(pwd)/sa.json"
+
 # creating the actual Service Account
 gcloud iam service-accounts create ${SA_NAME}
 
 # creating a json-key for the new Service Account
 gcloud iam service-accounts keys create ${SA_PATH} \
-    --iam-account ${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com
+    --iam-account ${SA_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com
     
 # give permissions to the new Service Account
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-    --member=serviceAccount:${SA_NAME}@${PROJECT_ID}.gserviceaccount.com \
+gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
+    --member=serviceAccount:${SA_NAME}@${GCP_PROJECT}.gserviceaccount.com \
     --role "roles/editor" 
 ```
 
