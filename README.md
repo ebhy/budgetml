@@ -6,7 +6,8 @@
 
 <p align="center">
   <a href="#quickstart">Quickstart</a> •
-  <a href="https://github.com/ebhy/budgetml/discussions">Community</a>
+  <a href="https://github.com/ebhy/budgetml/discussions">Community</a>  •
+  <a href="https://github.com/ebhy/budgetml/docs">Docs</a> 
 </p>
 
 [![PyPI - ZenML Version](https://img.shields.io/pypi/v/budgetml.svg?label=pip&logo=PyPI&logoColor=white)](https://pypi.org/project/budgetml/)
