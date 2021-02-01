@@ -4,8 +4,6 @@
 
 <h1>BudgetML: Deploy ML models on a budget</h1>
 
----
-
 <p align="center">
   <a href="#quickstart">Quickstart</a> •
   <a href="#installation">Installation</a> •
@@ -19,24 +17,16 @@
 ![GitHub](https://img.shields.io/github/license/ebhy/budgetml)
 </div>
 
----
 
-<div> Give us a 
+<div align="center"> Give us a 
     <img width="25" src="https://cdn.iconscout.com/icon/free/png-256/github-153-675523.png" alt="Slack"/>
 <b>GitHub star</b> to show your love!
 </div>
 
----
-# BudgetML
-BudgetML lets you deploy your model on a [Google Cloud Platform preemptible instance](https://cloud.google.com/compute/docs/instances/preemptible) 
-(which is **~80% cheaper** than a regular instance) with a **secured HTTPS API** endpoint.
-The tool sets it up in a way that the instance autostarts when it shuts down (at least once every 24 hours) with **only a few minutes of downtime**.
-BudgetML ensures the cheapest possible API endpoint with the lowest possible downtime. 
-
+# Why
 BudgetML is perfect for practitioners who would like to quickly deploy their models to an endpoint, but not waste a lot of 
 time, money, and effort trying to figure out how to do this end-to-end.
 
-## Why?
 We built BudgetML because it's hard to find a simple way to get a model in production **fast** and **cheaply**. 
 
 * Cloud functions are limited in memory and cost a lot at scale. 
@@ -47,6 +37,13 @@ We built BudgetML because it's hard to find a simple way to get a model in produ
 
 BudgetML is our answer to this challenge. It is supposed to be fast, easy, and developer-friendly. It is by no means meant to be used in a full-fledged 
 production-ready setup. It is simply a means to get a server up and running **as fast as possible** with the **lowest costs possible**.
+
+
+BudgetML lets you deploy your model on a [Google Cloud Platform preemptible instance](https://cloud.google.com/compute/docs/instances/preemptible) 
+(which is **~80% cheaper** than a regular instance) with a **secured HTTPS API** endpoint.
+The tool sets it up in a way that the instance autostarts when it shuts down (at least once every 24 hours) with **only a few minutes of downtime**.
+BudgetML ensures the cheapest possible API endpoint with the lowest possible downtime. 
+
 
 ## Key Features
 * Automatic [FastAPI](https://fastapi.tiangolo.com/) server endpoint generation (its faster than Flask).
@@ -141,5 +138,5 @@ We are two brothers who love building products, especially ML-related products t
 If you use this tool for any of your products, we would love to hear about it and potentially add it to this space.
 Please get in touch [via email](mailto:htahir111@gmail.com). 
 
-Oh and please do consider giving us a GitHub star if you like the repository - open-source is hard, and that support is 
-the best reward for it!
+Oh and please do consider giving us a GitHub star if you like the repository - open-source is hard, and the support 
+keeps us going.
