@@ -1,7 +1,7 @@
 <div align="center">
 
 <img src="docs/static/header.png">
-
+<div>BudgetML: Deploy ML models on a budget</div>
 ---
 
 <p align="center">
@@ -137,4 +137,7 @@ more than just deployments, and is more suited for professional workplaces.
 ## Proudly built by two brothers
 We are two brothers who love building products, especially ML-related products that make life easier for people.
 If you use this tool for any of your products, we would love to hear about it and potentially add it to this space.
-Please get in touch [via email](mailto:htahir111@gmail.com).
+Please get in touch [via email](mailto:htahir111@gmail.com). 
+
+Oh and please do consider giving us a GitHub star if you like the repository - open-source is hard, and that support is 
+the best reward for it!
