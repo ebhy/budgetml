@@ -46,7 +46,7 @@ BudgetML ensures the cheapest possible API endpoint with the lowest possible dow
 
 
 ## Key Features
-* Automatic [FastAPI](https://fastapi.tiangolo.com/) server endpoint generation (its faster than Flask).
+* Automatic [FastAPI](https://fastapi.tiangolo.com/) server endpoint generation (it's faster than Flask).
 * Fully interactive docs via [Swagger](https://swagger.io/docs/).
 * Built-in SSL certificate generation via [LetsEncrypt](https://letsencrypt.org/) and [docker-swag](https://github.com/linuxserver/docker-swag).
 * Uses cheap preemtible instances but has 99% uptime!
