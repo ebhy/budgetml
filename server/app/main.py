@@ -118,7 +118,7 @@ async def predict_image(request: UploadFile = File(...),
     global PREDICTOR
     if PREDICTOR is None:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="The predictor could not be loaded. Please check the logs "
                    "for more detail.",
         )
