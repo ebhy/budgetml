@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/static/header.png">
+<img src="docs/static/header_new.png">
 
 <h1>BudgetML: Deploy ML models on a budget</h1>
 
