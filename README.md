@@ -5,8 +5,8 @@
 <h1>BudgetML: Deploy ML models on a budget</h1>
 
 <p align="center">
-  <a href="#quickstart">Quickstart</a> •
   <a href="#installation">Installation</a> •
+  <a href="#quickstart">Quickstart</a> •
   <a href="https://github.com/ebhy/budgetml/discussions">Community</a>  •
   <a href="https://github.com/ebhy/budgetml/tree/main/docs">Docs</a> 
 </p>
