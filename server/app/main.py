@@ -90,7 +90,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             "token_type": "bearer"
         }
     raise HTTPException(
-        status_code=400, detail="Incorrect username or password")
+        status_code=401, detail="Incorrect username or password")
 
 
 @app.post("/predict/")
@@ -99,7 +99,7 @@ async def predict(request: Request,
     global PREDICTOR
     if PREDICTOR is None:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="The predictor could not be loaded. Please check the logs "
                    "for more detail.",
         )
@@ -137,7 +137,7 @@ async def predict_dict(request: Payload,
     global PREDICTOR
     if PREDICTOR is None:
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="The predictor could not be loaded. Please check the logs "
                    "for more detail.",
         )
