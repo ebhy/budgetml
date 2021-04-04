@@ -41,7 +41,7 @@ services:
             context: .
             dockerfile: template.Dockerfile
         ports:
-            - 8080:80 # maps port 8080 in our container to 80
+            - 80:80 # maps port 8080 in our container to 80
         restart: unless-stopped
         networks:
             - production
