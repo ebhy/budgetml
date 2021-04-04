@@ -321,7 +321,7 @@ class BudgetML:
         self.create_scheduler_job(
             project_id=self.project,
             topic=topic,
-            schedule='* * * * *',
+            schedule='*/5 * * * *',  # every fifth minute
             region=self.region,
         )
 

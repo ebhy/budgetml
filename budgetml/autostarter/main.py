@@ -22,5 +22,5 @@ def launch(event, context):
     zone = os.environ['BUDGET_ZONE']
     instance = os.environ['BUDGET_INSTANCE']
 
-    time.sleep(120)
+    time.sleep(10)
     start_instance(project, zone, instance)
