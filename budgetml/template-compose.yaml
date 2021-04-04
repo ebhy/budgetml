@@ -20,7 +20,7 @@ services:
             - ${BUDGET_CERTS_PATH}:/config/etc/letsencrypt/
         ports:
             - 443:443
-            - 80:80 #optional
+            # - 80:80 #optional
         restart: unless-stopped
         networks:
             - production
