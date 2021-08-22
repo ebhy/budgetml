@@ -31,7 +31,7 @@ We built BudgetML because it's hard to find a simple way to get a model in produ
 
 * Cloud functions are limited in memory and cost a lot at scale. 
 
-* Kubernetes clusters are an overkill for one single model. 
+* Kubernetes clusters are overkill for one single model. 
 
 * Deploying from scratch involves learning too many different concepts like SSL certificate generation, Docker, REST, Uvicorn/Gunicorn, backend servers etc., that are simply not within the scope of a typical data scientist.
 
@@ -46,7 +46,7 @@ BudgetML ensures the cheapest possible API endpoint with the lowest possible dow
 
 
 ## Key Features
-* Automatic [FastAPI](https://fastapi.tiangolo.com/) server endpoint generation (its faster than Flask).
+* Automatic [FastAPI](https://fastapi.tiangolo.com/) server endpoint generation (it's faster than Flask).
 * Fully interactive docs via [Swagger](https://swagger.io/docs/).
 * Built-in SSL certificate generation via [LetsEncrypt](https://letsencrypt.org/) and [docker-swag](https://github.com/linuxserver/docker-swag).
 * Uses cheap preemtible instances but has 99% uptime!
