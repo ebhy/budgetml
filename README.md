@@ -68,7 +68,7 @@ pip install budgetml
 ```
 Alternatively, if you’re feeling brave, feel free to install the bleeding edge:
 
-**NOTE:** Do so on your own risk, no guarantees given!
+**NOTE:** Do so at your own risk; no guarantees given!
 ```bash
 pip install git+https://github.com/ebhy/budgetml.git@main --upgrade
 ```
@@ -130,7 +130,7 @@ We are proud that BudgetML is actively being used in the following live products
 
 ## ZenML: For production scenarios
 BudgetML is for users on a budget. If you're working in a more serious production environment, then consider using 
-[ZenML](https://github.com/maiot-io/zenml) as the perfect open-source MLOPs framework for ML production needs. It does 
+[ZenML](https://github.com/zenml-io/zenml) as the perfect open-source MLOps framework for ML production needs. It does 
 more than just deployments, and is more suited for professional workplaces.
 
 ## Proudly built by two brothers
