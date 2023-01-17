@@ -1,3 +1,5 @@
+
+
 <div align="center">
 
 <img src="docs/static/header_new.png">
@@ -18,9 +20,9 @@
 </div>
 
 
-<div align="center"> Give us a 
-    <img width="25" src="https://cdn.iconscout.com/icon/free/png-256/github-153-675523.png" alt="Slack"/>
-<b>GitHub star</b> to show your love!
+<div align="center" style="font-size:30px"> 
+    <b>Notice: This library is not being actively maintained, and we're looking for someone to update it and keep it going! Reach out to me 
+    directly if you would like to help!</b>
 </div>
 
 # Why
