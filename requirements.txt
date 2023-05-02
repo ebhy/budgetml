@@ -1,5 +1,5 @@
 google-api-python-client==1.12.8
-google-cloud-storage==1.35.0
+google-cloud-storage==1.43.0
 docker==4.4.1
 google-cloud-scheduler==2.1.0
 google-cloud-pubsub==2.2.0
