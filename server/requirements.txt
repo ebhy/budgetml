@@ -1,4 +1,4 @@
-fastapi==0.65.2
+fastapi==0.109.1
 uvicorn==0.13.2
 google-api-python-client==1.12.8
 requests~=2.25.1
