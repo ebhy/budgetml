@@ -3,5 +3,5 @@ uvicorn==0.13.2
 google-api-python-client==1.12.8
 requests~=2.25.1
 google-cloud-storage==1.35.0
-python-multipart==0.0.5
+python-multipart==0.0.7
 aiofiles==0.4.0
